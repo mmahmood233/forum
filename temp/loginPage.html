@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Web Forum</title>
+    <title>Login Page</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -27,7 +27,7 @@
         header h1 {
             margin: 0;
         }
-        .register-container {
+        .login-container {
             background: #fff;
             padding: 20px;
             margin-top: 50px;
@@ -35,25 +35,25 @@
             border-radius: 5px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
-        .register-container h2 {
+        .login-container h2 {
             text-align: center;
             margin-bottom: 20px;
         }
-        .register-container form {
+        .login-container form {
             display: flex;
             flex-direction: column;
             align-items: center;
         }
-        .register-container input[type="text"], 
-        .register-container input[type="password"],
-        .register-container input[type="email"] {
+        .login-container input[type="text"], 
+        .login-container input[type="password"],
+        .login-container input[type="email"] {
             width: 80%;
             padding: 10px;
             margin: 10px 0;
             border: 1px solid #ccc;
             border-radius: 5px;
         }
-        .register-container input[type="submit"] {
+        .login-container input[type="submit"] {
             width: 80%;
             padding: 10px;
             margin: 20px 0;
@@ -64,11 +64,11 @@
             cursor: pointer;
             font-size: 16px;
         }
-        .register-container input[type="submit"]:hover {
+        .login-container input[type="submit"]:hover {
             background: #055a9c;
         }
-        .success-message {
-            color: green;
+        .login-message {
+            color: red;
             text-align: center;
             margin-bottom: 20px;
         }
@@ -85,15 +85,21 @@
 </head>
 <body>
     <header>
-        <h1>Web Forum</h1>
+        <h1>Login Page</h1>
     </header>
 
     <div class="container">
-        <div class="register-container">
-            <table>
-                <tr><button><a href="loginPage.html">Login</a></button></tr>
-                <tr><button><a href="regPage.html">Register</a></button></tr>
-            </table>
+        <div class="login-container">
+            <h2>Login</h2>
+            {{if .LoginMessage}}
+            <div class="login-message">{{.LoginMessage}}</div>
+            {{end}}
+            <form action="/doLogin" method="post">
+                <input type="email" name="email2" placeholder="Email" required>
+                <input type="password" name="password2" placeholder="Password" required>
+                <input type="submit" value="Login">
+                <button><a href="/">Back</a></button>
+            </form>
         </div>
     </div>
 

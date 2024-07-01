@@ -90,10 +90,17 @@
 
     <div class="container">
         <div class="register-container">
-            <table>
-                <tr><button><a href="loginPage.html">Login</a></button></tr>
-                <tr><button><a href="regPage.html">Register</a></button></tr>
-            </table>
+            <h2>Register</h2>
+            {{if .SuccessMessage}}
+            <div class="success-message">{{.SuccessMessage}}</div>
+            {{end}}
+            <form action="/doRegister" method="post">
+                <input type="email" name="email" placeholder="Email" required>
+                <input type="text" name="username" placeholder="Username" required>
+                <input type="password" name="password" placeholder="Password" required>
+                <input type="submit" value="Register">
+                <button><a href="/">Back</a></button>
+            </form>
         </div>
     </div>
 

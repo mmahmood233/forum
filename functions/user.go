@@ -8,7 +8,7 @@ import (
 
 func InsertUser(db *sql.DB, user *User) error {
     // Check if the user already exists
-    existingUser, err := valByEmail(db, user.Email)
+    existingUser, err := ValByEmail(db, user.Email)
     if err != nil {
         return err
     }
@@ -40,7 +40,7 @@ func InsertUser(db *sql.DB, user *User) error {
     return nil
 }
 
-func valByEmail(db *sql.DB, email string) (*User, error) {
+func ValByEmail(db *sql.DB, email string) (*User, error) {
     user := &User{}
     query := `SELECT id, email, username, password FROM users WHERE email = ?`
     row := db.QueryRow(query, email)
