@@ -54,3 +54,9 @@ type PostCategory struct {
     PostID     int
     CategoryID int
 }
+
+type Session struct {
+    SessionID string
+    UserID    int
+    ExpiresAt time.Time
+}
