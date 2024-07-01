@@ -1,8 +1,56 @@
 package forum
 
+import "time"
+
 type User struct {
-    ID       int
+    UserID   int
     Email    string
     Username string
     Password string
+}
+
+type Post struct {
+    PostID      int
+    UserID      int
+    PostTitle   string
+    PostContent string
+    CreatedAt   time.Time
+}
+
+type PostLike struct {
+    PostLikeID int
+    UserID     int
+    PostID     int
+    IsLike     bool
+}
+
+type Comment struct {
+    CommentID      int
+    PostID         int
+    UserID         int
+    CommentContent string
+    CreatedAt      time.Time 
+}
+
+type CommentLike struct {
+    CommentLikeID int
+    UserID        int
+    CommentID     int
+    IsLike        bool
+}
+
+type Category struct {
+    ID      int
+    CatName string
+}
+
+type Tag struct {
+    TagID   int
+    PostID  int
+    TagName string
+}
+
+type PostCategory struct {
+    PostID     int
+    CategoryID int
 }

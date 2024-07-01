@@ -33,9 +33,9 @@ func InsertUser(db *sql.DB, user *User) error {
         return err
     }
 
-    user.ID = int(userID) //to update struct with the id
+    user.UserID = int(userID) //to update struct with the id
 
-    log.Printf("New user registered with ID: %d", user.ID)
+    log.Printf("New user registered with ID: %d", user.UserID)
 
     return nil
 }
@@ -44,7 +44,7 @@ func ValByEmail(db *sql.DB, email string) (*User, error) {
     user := &User{}
     query := `SELECT id, email, username, password FROM users WHERE email = ?`
     row := db.QueryRow(query, email)
-    err := row.Scan(&user.ID, &user.Email, &user.Username, &user.Password)
+    err := row.Scan(&user.UserID, &user.Email, &user.Username, &user.Password)
     if err != nil {
         if err == sql.ErrNoRows { //when no rows returned
             return nil, nil // no user found with the email

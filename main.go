@@ -147,7 +147,7 @@ func handleLog(w http.ResponseWriter, r *http.Request) {
     }
 
     // Parse the HTML template file
-    tmpl, err := template.ParseFiles("temp/logPage.html")
+    tmpl, err := template.ParseFiles("temp/loginPage.html")
     if err != nil {
         http.Error(w, err.Error(), http.StatusInternalServerError)
         return
