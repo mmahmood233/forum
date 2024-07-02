@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Web Forum</title>
+    <title>Main Page</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -27,7 +27,7 @@
         header h1 {
             margin: 0;
         }
-        .register-container {
+        .post-container {
             background: #fff;
             padding: 20px;
             margin-top: 50px;
@@ -35,42 +35,18 @@
             border-radius: 5px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
-        .register-container h2 {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        .register-container form {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        .register-container input[type="text"], 
-        .register-container input[type="password"],
-        .register-container input[type="email"] {
-            width: 80%;
-            padding: 10px;
-            margin: 10px 0;
-            border: 1px solid #ccc;
+        .post {
+            background: #f9f9f9;
+            padding: 15px;
+            margin: 15px 0;
+            border: 1px solid #ddd;
             border-radius: 5px;
         }
-        .register-container input[type="submit"] {
-            width: 80%;
-            padding: 10px;
-            margin: 20px 0;
-            background: #0779e4;
-            color: #fff;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
+        .post h3 {
+            margin: 0 0 10px 0;
         }
-        .register-container input[type="submit"]:hover {
-            background: #055a9c;
-        }
-        .success-message {
-            color: green;
-            text-align: center;
-            margin-bottom: 20px;
+        .post p {
+            margin: 0;
         }
         footer {
             background: #333;
@@ -85,15 +61,23 @@
 </head>
 <body>
     <header>
-        <h1>Web Forum</h1>
+        <h1>Main Page</h1>
     </header>
 
     <div class="container">
-        <div class="register-container">
+        <div class="post-container">
             <table>
                 <tr><button><a href="doLogin">Login</a></button></tr>
                 <tr><button><a href="doRegister">Register</a></button></tr>
             </table>
+            {{range .}}
+                <div class="post">
+                    <p>{{.PostContent}}</p>
+                    <small>Posted on: {{.CreatedAt}}</small>
+                </div>
+            {{else}}
+                <p>No posts yet.</p>
+            {{end}}
         </div>
     </div>
 

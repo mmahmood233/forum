@@ -193,13 +193,46 @@ func handleLog(w http.ResponseWriter, r *http.Request) {
 
 
 func parseMain(w http.ResponseWriter, r *http.Request) {
+    // Retrieve posts from the database
+    posts, err := getPosts()
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+
+    // Parse the HTML template file
     tmpl, err := template.ParseFiles("temp/mainPage.html")
     if err != nil {
         http.Error(w, err.Error(), http.StatusInternalServerError)
         return
     }
-    tmpl.Execute(w, nil)
+
+    // Render the template with posts data
+    tmpl.Execute(w, posts)
 }
+
+func getPosts() ([]forum.Post, error) {
+    rows, err := database.Query("SELECT user_id, post_content, post_created_at FROM posts")
+    if err != nil {
+        return nil, err
+    }
+    defer rows.Close()
+
+    var posts []forum.Post
+    for rows.Next() {
+        var post forum.Post
+        if err := rows.Scan(&post.UserID, &post.PostContent, &post.CreatedAt); err != nil {
+            return nil, err
+        }
+        posts = append(posts, post)
+    }
+    if err := rows.Err(); err != nil {
+        return nil, err
+    }
+    
+    return posts, nil
+}
+
 
 // func createKey() ([]byte, error) {
 //     key := make([]byte, 32)
@@ -253,12 +286,6 @@ func createPost(w http.ResponseWriter, r *http.Request) {
             CreatedAt:   time.Now(),
         }
 
-        // Print the post data in the terminal
-        fmt.Printf("New Post:\n")
-        fmt.Printf("  User ID: %d\n", post.UserID)
-        fmt.Printf("  Post Content: %s\n", post.PostContent)
-        fmt.Printf("  Created At: %v\n", post.CreatedAt)
-
         // Insert the post into the database
         err = insertPost(post)
         if err != nil {
@@ -266,8 +293,8 @@ func createPost(w http.ResponseWriter, r *http.Request) {
             return
         }
 
-        // Redirect to the post page or display a success message
-        // http.Redirect(w, r, "/posts", http.StatusSeeOther)
+        // Redirect to the main page
+        http.Redirect(w, r, "/", http.StatusSeeOther)
         return
     }
 
@@ -281,6 +308,7 @@ func createPost(w http.ResponseWriter, r *http.Request) {
     // Render the template
     tmpl.Execute(w, nil)
 }
+
 
 
 
