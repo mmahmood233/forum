@@ -12,10 +12,10 @@ type User struct {
 type Post struct {
     PostID      int
     UserID      int
-    // PostTitle   string
     PostContent string
     CreatedAt   time.Time
 }
+
 
 type PostLike struct {
     PostLikeID int

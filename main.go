@@ -235,12 +235,6 @@ func sessionMiddleware(next http.Handler) http.Handler {
 
 
 func createPost(w http.ResponseWriter, r *http.Request) {
-    tmpl, err := template.ParseFiles("temp/comPage.html")
-    if err != nil {
-        http.Error(w, err.Error(), http.StatusInternalServerError)
-        return
-    }
-
     if r.Method == http.MethodPost {
         // Get the session data to identify the user
         session, err := getSession(r)
@@ -249,23 +243,21 @@ func createPost(w http.ResponseWriter, r *http.Request) {
             return
         }
 
-        // // Check if the user is authenticated
-        // if session.Values["user_id"] == nil {
-        //     http.Redirect(w, r, "/login", http.StatusSeeOther)
-        //     return
-        // }
-
         // Get the form values
-        // postTitle := r.FormValue("title")
         postContent := r.FormValue("postCont")
 
         // Create a new Post struct
         post := &forum.Post{
             UserID:      session.Values["user_id"].(int),
-            // PostTitle:   postTitle,
             PostContent: postContent,
             CreatedAt:   time.Now(),
         }
+
+        // Print the post data in the terminal
+        fmt.Printf("New Post:\n")
+        fmt.Printf("  User ID: %d\n", post.UserID)
+        fmt.Printf("  Post Content: %s\n", post.PostContent)
+        fmt.Printf("  Created At: %v\n", post.CreatedAt)
 
         // Insert the post into the database
         err = insertPost(post)
@@ -275,23 +267,28 @@ func createPost(w http.ResponseWriter, r *http.Request) {
         }
 
         // Redirect to the post page or display a success message
-        http.Redirect(w, r, "/posts", http.StatusSeeOther)
+        // http.Redirect(w, r, "/posts", http.StatusSeeOther)
         return
     }
 
+    // Parse the HTML template file
+    tmpl, err := template.ParseFiles("temp/comPage.html")
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+
+    // Render the template
     tmpl.Execute(w, nil)
 }
 
 
 
-func insertPost(post *forum.Post) error {
-    db, err := openDB() // Open a connection to the SQLite database
-    if err != nil {
-        return err
-    }
-    defer db.Close()
 
-    stmt, err := db.Prepare("INSERT INTO posts (user_id, post_title, post_content, created_at) VALUES (?, ?, ?, ?)")
+
+
+func insertPost(post *forum.Post) error {
+    stmt, err := database.Prepare("INSERT INTO posts (user_id, post_content, post_created_at) VALUES (?, ?, ?)")
     if err != nil {
         return err
     }
@@ -304,6 +301,8 @@ func insertPost(post *forum.Post) error {
 
     return nil
 }
+
+
 func getSession(r *http.Request) (*sessions.Session, error) {
     // Get the session from the request
     session, err := store.Get(r, sessionName)
@@ -314,13 +313,13 @@ func getSession(r *http.Request) (*sessions.Session, error) {
     return session, nil
 }
 
-func openDB() (*sql.DB, error) {
-    if database == nil {
-        var err error
-        database, err = sql.Open("sqlite", "./temp/forum.db")
-        if err != nil {
-            return nil, err
-        }
-    }
-    return database, nil
-}
+// func openDB() (*sql.DB, error) {
+//     if database == nil {
+//         var err error
+//         database, err = sql.Open("sqlite", "./temp/forum.db")
+//         if err != nil {
+//             return nil, err
+//         }
+//     }
+//     return database, nil
+// }
