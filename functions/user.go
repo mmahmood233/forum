@@ -16,7 +16,7 @@ func InsertUser(db *sql.DB, user *User) error {
         return errors.New("user with this email already exists")
     }
 
-    insertUserSQL := `INSERT INTO users(email, username, password) VALUES (?, ?, ?)`
+    insertUserSQL := `INSERT INTO users(email, username, password1) VALUES (?, ?, ?)`
     statement, err := db.Prepare(insertUserSQL)
     if err != nil {
         return err
@@ -42,7 +42,7 @@ func InsertUser(db *sql.DB, user *User) error {
 
 func ValByEmail(db *sql.DB, email string) (*User, error) {
     user := &User{}
-    query := `SELECT id, email, username, password FROM users WHERE email = ?`
+    query := `SELECT user_id, email, username, password1 FROM users WHERE email = ?`
     row := db.QueryRow(query, email)
     err := row.Scan(&user.UserID, &user.Email, &user.Username, &user.Password)
     if err != nil {

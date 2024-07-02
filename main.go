@@ -155,7 +155,6 @@ func handleLog(w http.ResponseWriter, r *http.Request) {
 
         // Create a new session for the user
         session, err := getSession(r)
-        
         if err != nil {
             http.Error(w, err.Error(), http.StatusInternalServerError)
             return
@@ -189,6 +188,7 @@ func handleLog(w http.ResponseWriter, r *http.Request) {
     // Render the template
     tmpl.Execute(w, nil)
 }
+
 
 
 

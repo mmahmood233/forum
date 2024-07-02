@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS users (
     user_id INTEGER PRIMARY KEY AUTOINCREMENT,
     email TEXT NOT NULL UNIQUE,
     username TEXT NOT NULL,
-    password TEXT NOT NULL
+    password1 TEXT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS posts (
