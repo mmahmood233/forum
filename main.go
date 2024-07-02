@@ -8,10 +8,17 @@ import (
     "log"
     "net/http"
     "os"
+    "context"
+    "time"
+    // "crypto/rand"
+
 
     _ "modernc.org/sqlite"
 
     forum "forum/functions"
+
+    "github.com/gorilla/sessions"
+
 )
 
 var database *sql.DB
@@ -26,7 +33,14 @@ func main() {
     http.HandleFunc("/", parseMain)
 
     http.HandleFunc("/doRegister", handleReg)
-    http.HandleFunc("/doLogin", handleLog)
+    // http.HandleFunc("/doLogin", handleLog)
+    http.Handle("/doLogin", sessionMiddleware(http.HandlerFunc(handleLog)))
+    http.HandleFunc("/createP", createPost)
+
+
+    // http.HandleFunc("/createP", createPost)
+
+
 
 
     // Initialize the database
@@ -121,29 +135,48 @@ func handleReg(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleLog(w http.ResponseWriter, r *http.Request) {
-    var loginMessage string
-
     if r.Method == http.MethodPost {
         email := r.FormValue("email2")
         password := r.FormValue("password2")
 
         log.Printf("Received form data: email=%s, password=%s\n", email, password)
 
+        // Authenticate the user (e.g., check the email and password)
         user, err := forum.ValByEmail(database, email)
         if err != nil {
             http.Error(w, err.Error(), http.StatusInternalServerError)
             return
         }
-        if user == nil {
-            loginMessage = "No user found with this email"
-        } else {
-            // Check if the password matches
-            if user.Password == password {
-                loginMessage = "Login successful!"
-            } else {
-                loginMessage = "Invalid password"
-            }
+
+        if user == nil || user.Password != password {
+            http.Error(w, "Invalid email or password", http.StatusUnauthorized)
+            return
         }
+
+        // Create a new session for the user
+        session, err := getSession(r)
+        
+        if err != nil {
+            http.Error(w, err.Error(), http.StatusInternalServerError)
+            return
+        }
+
+        // Set the user ID in the session data
+        session.Values["user_id"] = user.UserID
+
+        // Set the session expiration time (e.g., 24 hours)
+        session.Options.MaxAge = 24 * 60 * 60
+
+        // Save the session
+        err = session.Save(r, w)
+        if err != nil {
+            http.Error(w, err.Error(), http.StatusInternalServerError)
+            return
+        }
+
+        // Redirect the user to the home page or another page
+        http.Redirect(w, r, "/createP", http.StatusSeeOther)
+        return
     }
 
     // Parse the HTML template file
@@ -153,16 +186,11 @@ func handleLog(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    // Define and initialize the anonymous struct
-    data := struct {
-        LoginMessage string
-    }{
-        LoginMessage: loginMessage,
-    }
-
-    // Render the template with the data
-    tmpl.Execute(w, data)
+    // Render the template
+    tmpl.Execute(w, nil)
 }
+
+
 
 func parseMain(w http.ResponseWriter, r *http.Request) {
     tmpl, err := template.ParseFiles("temp/mainPage.html")
@@ -171,4 +199,128 @@ func parseMain(w http.ResponseWriter, r *http.Request) {
         return
     }
     tmpl.Execute(w, nil)
+}
+
+// func createKey() ([]byte, error) {
+//     key := make([]byte, 32)
+//     _, err := rand.Read(key)
+//     if err != nil {
+//         return nil, err
+//     }
+//     return key, nil
+// }
+
+var (
+    // Create a new session store
+    store = sessions.NewCookieStore([]byte("your-secret-key"))
+    sessionName = "forum-session"
+
+)
+
+
+func sessionMiddleware(next http.Handler) http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        // Get the session from the request
+        session, err := store.Get(r, "session-name")
+        if err != nil {
+            http.Error(w, err.Error(), http.StatusInternalServerError)
+            return
+        }
+
+        // Save the session data in the request context
+        ctx := context.WithValue(r.Context(), "session", session)
+        next.ServeHTTP(w, r.WithContext(ctx))
+    })
+}
+
+
+func createPost(w http.ResponseWriter, r *http.Request) {
+    tmpl, err := template.ParseFiles("temp/comPage.html")
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+
+    if r.Method == http.MethodPost {
+        // Get the session data to identify the user
+        session, err := getSession(r)
+        if err != nil {
+            http.Error(w, err.Error(), http.StatusInternalServerError)
+            return
+        }
+
+        // // Check if the user is authenticated
+        // if session.Values["user_id"] == nil {
+        //     http.Redirect(w, r, "/login", http.StatusSeeOther)
+        //     return
+        // }
+
+        // Get the form values
+        // postTitle := r.FormValue("title")
+        postContent := r.FormValue("postCont")
+
+        // Create a new Post struct
+        post := &forum.Post{
+            UserID:      session.Values["user_id"].(int),
+            // PostTitle:   postTitle,
+            PostContent: postContent,
+            CreatedAt:   time.Now(),
+        }
+
+        // Insert the post into the database
+        err = insertPost(post)
+        if err != nil {
+            http.Error(w, err.Error(), http.StatusInternalServerError)
+            return
+        }
+
+        // Redirect to the post page or display a success message
+        http.Redirect(w, r, "/posts", http.StatusSeeOther)
+        return
+    }
+
+    tmpl.Execute(w, nil)
+}
+
+
+
+func insertPost(post *forum.Post) error {
+    db, err := openDB() // Open a connection to the SQLite database
+    if err != nil {
+        return err
+    }
+    defer db.Close()
+
+    stmt, err := db.Prepare("INSERT INTO posts (user_id, post_title, post_content, created_at) VALUES (?, ?, ?, ?)")
+    if err != nil {
+        return err
+    }
+    defer stmt.Close()
+
+    _, err = stmt.Exec(post.UserID, post.PostContent, post.CreatedAt)
+    if err != nil {
+        return err
+    }
+
+    return nil
+}
+func getSession(r *http.Request) (*sessions.Session, error) {
+    // Get the session from the request
+    session, err := store.Get(r, sessionName)
+    if err != nil {
+        return nil, err
+    }
+
+    return session, nil
+}
+
+func openDB() (*sql.DB, error) {
+    if database == nil {
+        var err error
+        database, err = sql.Open("sqlite", "./temp/forum.db")
+        if err != nil {
+            return nil, err
+        }
+    }
+    return database, nil
 }
