@@ -72,8 +72,21 @@
             </table>
             {{range .}}
                 <div class="post">
-                    <p>{{.PostContent}}</p>
-                    <small>Posted on: {{.CreatedAt}}</small>
+                    <h3>{{.User.Username}}</h3>
+                    <p>{{.Post.PostContent}}</p>
+                    <small>Posted on: {{.Post.CreatedAt}}</small>
+                    <form action="/createC?postID={{.Post.PostID}}" method="post">
+                        <textarea name="commentCont" placeholder="Comment Content" required></textarea>
+                        <button type="submit">Add Comment</button>
+                    </form>
+                    <div class="comments">
+                        {{range .Comments}}
+                            <div class="comment">
+                                <p>{{.CommentContent}}</p>
+                                <small>Commented by: {{.Username}} on {{.CreatedAt}}</small>
+                            </div>
+                        {{end}}
+                    </div>
                 </div>
             {{else}}
                 <p>No posts yet.</p>

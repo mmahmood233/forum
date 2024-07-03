@@ -30,6 +30,7 @@ type Comment struct {
     UserID         int
     CommentContent string
     CreatedAt      time.Time 
+    Username       string
 }
 
 type CommentLike struct {
