@@ -31,6 +31,7 @@ func main() {
 	http.HandleFunc("/WebServer", forum.WebServer)
 
 	http.HandleFunc("/", parseMain)
+	http.HandleFunc("/registered", parseReg)
 
 	http.HandleFunc("/doRegister", handleReg)
 	// http.HandleFunc("/doLogin", handleLog)
@@ -171,7 +172,7 @@ func handleLog(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Redirect the user to the home page or another page
-		http.Redirect(w, r, "/createP", http.StatusSeeOther)
+		http.Redirect(w, r, "/registered", http.StatusSeeOther)
 		return
 	}
 
@@ -204,6 +205,26 @@ func parseMain(w http.ResponseWriter, r *http.Request) {
 	// Render the template with posts data
 	tmpl.Execute(w, posts)
 }
+
+func parseReg(w http.ResponseWriter, r *http.Request) {
+    // Retrieve posts from the database
+    posts, err := getPosts()
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+
+    // Parse the HTML template file
+    tmpl, err := template.ParseFiles("temp/registered.html")
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+
+    // Render the template with posts data
+    tmpl.Execute(w, posts)
+}
+
 
 // func getPosts() ([]struct {
 //     Post forum.Post
@@ -304,7 +325,7 @@ func createPost(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Redirect to the main page
-		http.Redirect(w, r, "/", http.StatusSeeOther)
+		http.Redirect(w, r, "/registered", http.StatusSeeOther)
 		return
 	}
 
