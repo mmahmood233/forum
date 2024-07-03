@@ -462,7 +462,7 @@ func createComment(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		http.Redirect(w, r, "/", http.StatusSeeOther)
+		http.Redirect(w, r, "/registered", http.StatusSeeOther)
 		return
 	}
 }
