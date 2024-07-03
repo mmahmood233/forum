@@ -34,6 +34,8 @@
             border: 1px solid #e4e4e4;
             border-radius: 5px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-height: 500px;
+            overflow: auto;
         }
         .post {
             background: #f9f9f9;
@@ -76,6 +78,13 @@
                     <p>{{.Post.PostContent}}</p>
                     <small>Posted on: {{.Post.CreatedAt}}</small>
                     <form action="/createC?postID={{.Post.PostID}}" method="post">
+                        <div class="comments">
+                            {{range .Comments}}
+                            <div class="comment">
+                                <p>{{.CommentContent}}</p>
+                                <small>Commented by: {{.Username}} on {{.CreatedAt}}</small>
+                </div>
+                {{end}}
                 </div>
             {{else}}
                 <p>No posts yet.</p>
