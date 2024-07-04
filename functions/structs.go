@@ -24,6 +24,14 @@ type PostLike struct {
     IsLike     bool
 }
 
+type PostDislike struct {
+    PostDislikeID int
+    UserID        int
+    PostID     int
+    IsDislike        bool
+}
+
+
 type Comment struct {
     CommentID      int
     PostID         int
@@ -38,6 +46,13 @@ type CommentLike struct {
     UserID        int
     CommentID     int
     IsLike        bool
+}
+
+type CommentDislike struct {
+    CommentDislikeID int
+    UserID        int
+    CommentID     int
+    IsDislike        bool
 }
 
 type Category struct {

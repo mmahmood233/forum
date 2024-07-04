@@ -14,15 +14,18 @@
         .container {
             width: 80%;
             margin: auto;
-            overflow: hidden;
+            overflow: auto;
         }
         header {
-            background: #333;
-            color: #fff;
-            padding-top: 30px;
-            min-height: 70px;
-            border-bottom: #0779e4 3px solid;
+            position: fixed;
             text-align: center;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background-color: #333;
+            color: #fff;
+            padding: 20px;
+            z-index: 1000;
         }
         header h1 {
             margin: 0;
@@ -34,8 +37,8 @@
             border: 1px solid #e4e4e4;
             border-radius: 5px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            max-height: 500px;
-            overflow: auto;
+            /* max-height: 500px; */
+            overflow: hidden;
         }
         .post {
             background: #f9f9f9;
@@ -50,22 +53,6 @@
         .post p {
             margin: 0;
         }
-        button{
-  cursor: pointer;
-  outline: 0;
-}
-
-.btn:focus {
-  outline: none;
-}
-
-.green{
-  color: green;
-}
-
-.red{
-  color: red;
-}
         footer {
             background: #333;
             color: #fff;
@@ -75,20 +62,30 @@
             bottom: 0;
             width: 100%;
         }
+        .green {
+            color:green;
+        }
+        .red {
+            color: red;
+        }
+        .cont {
+                table-layout: left; 
+        }
     </style>
 </head>
 <body>
     <header>
-        <h1>Registered</h1>
+        <h1>MAIN</h1>
+        <table id="cont">
+            <tr><button><a href="doLogin">Login</a></button></tr>
+            <tr><button><a href="doRegister">Register</a></button></tr>
+            <tr><button><a href="createP">Create Post</a></button></tr>
+        </table>
     </header>
 
     <div class="container">
         <div class="post-container">
-            <table>
-                <tr><button><a href="doLogin">Login</a></button></tr>
-                <tr><button><a href="doRegister">Register</a></button></tr>
-                <tr><button><a href="createP">Create Post</a></button></tr>
-            </table>
+            
             {{range .}}
             <div class="post">
                 <h3>{{.User.Username}}</h3>
@@ -106,7 +103,8 @@
                     {{range .Comments}}
                     <div class="comment">
                         <p>{{.CommentContent}}</p>
-                        <small>Commented by: {{.Username}} on {{.CreatedAt}}</small>
+                        <small>Commented by: {{.Username}} </small><br>
+                        <small>on {{.CreatedAt}}</small>
                         <script src="https://use.fontawesome.com/fe459689b4.js"></script>
                                 <br>
                             <button class="btn" id="green" data-count="0"><i class="fa fa-thumbs-up fa-lg" aria-hidden="true"></i> <span class="count">0</span></button>
@@ -126,7 +124,7 @@
     </footer>
 </body>
 <script>
-    var btns = document.querySelectorAll('.btn');
+var btns = document.querySelectorAll('.btn');
 
 btns.forEach(function(btn) {
   btn.setAttribute('data-count', '0');
@@ -139,8 +137,10 @@ btns.forEach(function(btn) {
 
     if (this.id === 'green') {
       if (greenBtn.classList.contains('clicked')) {
-        // Green button has already been clicked, do nothing
-        return;
+        // Green button has already been clicked
+        greenBtn.classList.remove('clicked');
+        greenBtn.classList.remove('green');
+        count = 0;
       } else {
         // Remove the clicked class from the red button
         redBtn.classList.remove('clicked');
@@ -157,8 +157,10 @@ btns.forEach(function(btn) {
       }
     } else {
       if (redBtn.classList.contains('clicked')) {
-        // Red button has already been clicked, do nothing
-        return;
+        // Red button has already been clicked
+        redBtn.classList.remove('clicked');
+        redBtn.classList.remove('red');
+        count = 0;
       } else {
         // Remove the clicked class from the green button
         greenBtn.classList.remove('clicked');
@@ -174,7 +176,14 @@ btns.forEach(function(btn) {
         redBtn.classList.add('clicked');
       }
     }
+
+    this.setAttribute('data-count', count);
+    this.querySelector('.count').textContent = count;
+  });
+
+  btn.addEventListener('dblclick', function(event) {
+    event.preventDefault();
   });
 });
-    </script>
+</script>
 </html>

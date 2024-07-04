@@ -196,7 +196,7 @@ func parseMain(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Parse the HTML template file
-	tmpl, err := template.ParseFiles("temp/mainPage.html")
+	tmpl, err := template.ParseFiles("temp/registered.html")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -300,14 +300,12 @@ func sessionMiddleware(next http.Handler) http.Handler {
 
 func createPost(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
-		// Get the session data to identify the user
 		session, err := getSession(r)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		// Get the form values
 		postContent := r.FormValue("postCont")
 
 		// Create a new Post struct
@@ -324,12 +322,10 @@ func createPost(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// Redirect to the main page
 		http.Redirect(w, r, "/registered", http.StatusSeeOther)
 		return
 	}
 
-	// Parse the HTML template file
 	tmpl, err := template.ParseFiles("temp/comPage.html")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -439,6 +435,12 @@ func createComment(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		userId, ok := session.Values["user_id"].(int)
+		if !ok || userId == 0 {
+			http.Error(w, "You must be registered to comment.", http.StatusUnauthorized)
+			return
+		}
+
 		comContent := r.FormValue("commentCont")
 		postID := r.URL.Query().Get("postID")
 
@@ -450,7 +452,7 @@ func createComment(w http.ResponseWriter, r *http.Request) {
 		}
 
 		comment := &forum.Comment{
-			UserID:         session.Values["user_id"].(int),
+			UserID:         userId,
 			PostID:         postIDInt,
 			CommentContent: comContent,
 			CreatedAt:      time.Now(),
@@ -524,7 +526,6 @@ func getCommentsByPostID(postID int) ([]forum.Comment, error) {
         JOIN users u ON c.user_id = u.user_id
         WHERE c.post_id = ?
     `
-
 	rows, err := database.Query(query, postID)
 	if err != nil {
 		return nil, err

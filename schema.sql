@@ -24,6 +24,17 @@ CREATE TABLE IF NOT EXISTS post_likes (
     FOREIGN KEY (post_id) REFERENCES posts(post_id)
 );
 
+
+CREATE TABLE IF NOT EXISTS post_dislikes (
+    post_dislikes_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    post_id INTEGER NOT NULL,
+    post_is_dislike BOOLEAN NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(user_id),
+    FOREIGN KEY (post_id) REFERENCES posts(post_id)
+);
+
+
 CREATE TABLE IF NOT EXISTS comments (
     comment_id INTEGER PRIMARY KEY AUTOINCREMENT,
     post_id INTEGER NOT NULL,
@@ -39,6 +50,16 @@ CREATE TABLE IF NOT EXISTS comment_likes (
     user_id INTEGER NOT NULL,
     comment_id INTEGER NOT NULL,
     comment_is_like BOOLEAN NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(user_id),
+    FOREIGN KEY (comment_id) REFERENCES comments(comment_id)
+);
+
+
+CREATE TABLE IF NOT EXISTS comment_dislikes (
+    comment_dislikes_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    comment_id INTEGER NOT NULL,
+    comment_is_dislike BOOLEAN NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(user_id),
     FOREIGN KEY (comment_id) REFERENCES comments(comment_id)
 );
