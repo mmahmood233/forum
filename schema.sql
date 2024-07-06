@@ -24,7 +24,6 @@ CREATE TABLE IF NOT EXISTS post_likes (
     FOREIGN KEY (post_id) REFERENCES posts(post_id)
 );
 
-
 CREATE TABLE IF NOT EXISTS post_dislikes (
     post_dislikes_id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
@@ -33,7 +32,6 @@ CREATE TABLE IF NOT EXISTS post_dislikes (
     FOREIGN KEY (user_id) REFERENCES users(user_id),
     FOREIGN KEY (post_id) REFERENCES posts(post_id)
 );
-
 
 CREATE TABLE IF NOT EXISTS comments (
     comment_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -54,7 +52,6 @@ CREATE TABLE IF NOT EXISTS comment_likes (
     FOREIGN KEY (comment_id) REFERENCES comments(comment_id)
 );
 
-
 CREATE TABLE IF NOT EXISTS comment_dislikes (
     comment_dislikes_id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
@@ -73,14 +70,14 @@ CREATE TABLE IF NOT EXISTS tags (
     tag_id INTEGER PRIMARY KEY AUTOINCREMENT,
     post_id INTEGER NOT NULL,
     tags_name TEXT NOT NULL UNIQUE,
-    FOREIGN KEY (post_id) REFERENCES post(post_id)
+    FOREIGN KEY (post_id) REFERENCES posts(post_id)
 );
 
 CREATE TABLE IF NOT EXISTS post_categories (
     post_id INTEGER NOT NULL,
     category_id INTEGER NOT NULL,
     FOREIGN KEY (post_id) REFERENCES posts(post_id),
-    FOREIGN KEY (category_id) REFERENCES categories(cat_id),
+    FOREIGN KEY (category_id) REFERENCES categories(id),
     PRIMARY KEY (post_id, category_id)
 );
 
