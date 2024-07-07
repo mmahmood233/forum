@@ -124,66 +124,93 @@
     </footer>
 </body>
 <script>
-var btns = document.querySelectorAll('.btn');
-
-btns.forEach(function(btn) {
-  btn.setAttribute('data-count', '0');
-  btn.querySelector('.count').textContent = '0';
-
-  btn.addEventListener('click', function() {
-    var count = parseInt(this.getAttribute('data-count'));
-    var greenBtn = this.parentNode.querySelector('#green');
-    var redBtn = this.parentNode.querySelector('#red');
-
-    if (this.id === 'green') {
-      if (greenBtn.classList.contains('clicked')) {
-        // Green button has already been clicked
-        greenBtn.classList.remove('clicked');
-        greenBtn.classList.remove('green');
-        count = 0;
-      } else {
-        // Remove the clicked class from the red button
-        redBtn.classList.remove('clicked');
-        redBtn.classList.remove('red');
-        redBtn.querySelector('.count').textContent = '0';
-        redBtn.setAttribute('data-count', '0');
-
-        // Toggle the green button and update the count
-        greenBtn.classList.toggle('green');
-        count = (count === 0) ? 1 : 0;
-        greenBtn.setAttribute('data-count', count);
-        greenBtn.querySelector('.count').textContent = count;
-        greenBtn.classList.add('clicked');
-      }
-    } else {
-      if (redBtn.classList.contains('clicked')) {
-        // Red button has already been clicked
-        redBtn.classList.remove('clicked');
-        redBtn.classList.remove('red');
-        count = 0;
-      } else {
-        // Remove the clicked class from the green button
-        greenBtn.classList.remove('clicked');
-        greenBtn.classList.remove('green');
-        greenBtn.querySelector('.count').textContent = '0';
-        greenBtn.setAttribute('data-count', '0');
-
-        // Toggle the red button and update the count
-        redBtn.classList.toggle('red');
-        count = (count === 0) ? 1 : 0;
-        redBtn.setAttribute('data-count', count);
-        redBtn.querySelector('.count').textContent = count;
-        redBtn.classList.add('clicked');
-      }
+    var btns = document.querySelectorAll('.btn');
+    
+    btns.forEach(function(btn) {
+      btn.setAttribute('data-count', '0');
+      btn.querySelector('.count').textContent = '0';
+    
+      btn.addEventListener('click', function() {
+        var count = parseInt(this.getAttribute('data-count'));
+        var greenBtn = this.parentNode.querySelector('#green');
+        var redBtn = this.parentNode.querySelector('#red');
+        var isPost = this.parentNode.classList.contains('post');
+    
+        if (this.id === 'green') {
+          if (greenBtn.classList.contains('clicked')) {
+            // Green button has already been clicked
+            greenBtn.classList.remove('clicked');
+            greenBtn.classList.remove('green');
+            count = 0;
+          } else {
+            // Remove the clicked class from the red button
+            redBtn.classList.remove('clicked');
+            redBtn.classList.remove('red');
+            redBtn.querySelector('.count').textContent = '0';
+            redBtn.setAttribute('data-count', '0');
+    
+            // Toggle the green button and update the count
+            greenBtn.classList.toggle('green');
+            count = (count === 0)? 1 : 0;
+            greenBtn.setAttribute('data-count', count);
+            greenBtn.querySelector('.count').textContent = count;
+            greenBtn.classList.add('clicked');
+    
+            // Send feedback
+            sendFeedback('like', this.parentNode.dataset.id, isPost);
+          }
+        } else {
+          if (redBtn.classList.contains('clicked')) {
+            // Red button has already been clicked
+            redBtn.classList.remove('clicked');
+            redBtn.classList.remove('red');
+            count = 0;
+          } else {
+            // Remove the clicked class from the green button
+            greenBtn.classList.remove('clicked');
+            greenBtn.classList.remove('green');
+            greenBtn.querySelector('.count').textContent = '0';
+            greenBtn.setAttribute('data-count', '0');
+    
+            // Toggle the red button and update the count
+            redBtn.classList.toggle('red');
+            count = (count === 0)? 1 : 0;
+            redBtn.setAttribute('data-count', count);
+            redBtn.querySelector('.count').textContent = count;
+            redBtn.classList.add('clicked');
+    
+            // Send feedback
+            sendFeedback('dislike', this.parentNode.dataset.id, isPost);
+          }
+        }
+    
+        this.setAttribute('data-count', count);
+        this.querySelector('.count').textContent = count;
+      });
+    
+      btn.addEventListener('dblclick', function(event) {
+        event.preventDefault();
+      });
+    });
+    
+    function SendFeedback(type, id, isPost) {
+      fetch('/feedback', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          feedback: isPost? (type === 'like'? 'post_like' : 'post_dislike') : (type === 'like'? 'comment_like' : 'comment_dislike'),
+          id: id,
+        }),
+      })
+     .then(response => response.json())
+     .then(data => {
+        console.log('Success:', data);
+      })
+     .catch((error) => {
+        console.error('Error:', error);
+      });
     }
-
-    this.setAttribute('data-count', count);
-    this.querySelector('.count').textContent = count;
-  });
-
-  btn.addEventListener('dblclick', function(event) {
-    event.preventDefault();
-  });
-});
-</script>
+    </script>
 </html>

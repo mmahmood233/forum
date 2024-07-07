@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"io/ioutil"
@@ -38,14 +39,17 @@ func main() {
 	http.Handle("/doLogin", sessionMiddleware(http.HandlerFunc(handleLog)))
 	http.HandleFunc("/createP", createPost)
 	http.HandleFunc("/createC", createComment)
-	http.HandleFunc("/like-post", handleLikePost)
-	http.HandleFunc("/dislike-post", handleDislikePost)
-	http.HandleFunc("/like-comment", handleLikeComment)
-	http.HandleFunc("/dislike-comment", handleDislikeComment)
+	http.HandleFunc("/feedback", feedbackHandler)
+
+	// http.HandleFunc("/like-post", handleLikePost)
+	// http.HandleFunc("/dislike-post", handleDislikePost)
+	// http.HandleFunc("/like-comment", handleLikeComment)
+	// http.HandleFunc("/dislike-comment", handleDislikeComment)
 
 	// http.HandleFunc("/createP", createPost)
 
 	// Initialize the database
+
 	var err error
 	database, err = sql.Open("sqlite", "./temp/forum.db")
 	if err != nil {
@@ -87,6 +91,79 @@ func executeSQLFile(db *sql.DB, filepath string) error {
 
 	return nil
 }
+
+// new
+type Feedback struct {
+	FeedbackType string `json:"forum"`
+}
+
+// var db *sql.DB
+
+func feedbackHandler(w http.ResponseWriter, r *http.Request) {
+    if r.Method == http.MethodPost {
+        var feedback struct {
+            Type    string `json:"type"`
+            ID      int    `json:"id"`
+            IsPost  bool   `json:"isPost"`
+            UserID  int    `json:"userID"`
+        }
+        err := json.NewDecoder(r.Body).Decode(&feedback)
+        if err != nil {
+            http.Error(w, err.Error(), http.StatusBadRequest)
+            return
+        }
+
+        switch feedback.Type {
+        case "like":
+            if feedback.IsPost {
+                InsertPostLike(feedback.UserID, feedback.ID)
+            } else {
+                InsertCommentLike(feedback.UserID, feedback.ID)
+            }
+        case "dislike":
+            if feedback.IsPost {
+                InsertPostDislike(feedback.UserID, feedback.ID)
+            } else {
+                InsertCommentDislike(feedback.UserID, feedback.ID)
+            }
+        }
+
+        w.Header().Set("Content-Type", "application/json")
+        json.NewEncoder(w).Encode(map[string]string{"status": "success"})
+    } else {
+        http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+    }
+}
+
+func InsertCommentLike(userID int, commentID int) {
+    _, err := database.Exec(`INSERT INTO comment_likes (user_id, comment_id, comment_is_like) VALUES (?, ?, ?)`, userID, commentID, true)
+    if err != nil {
+        log.Fatal(err)
+    }
+}
+
+func InsertCommentDislike(userID int, commentID int) {
+    _, err := database.Exec(`INSERT INTO comment_dislikes (user_id, comment_id, comment_is_dislike) VALUES (?, ?, ?)`, userID, commentID, true)
+    if err != nil {
+        log.Fatal(err)
+    }
+}
+
+func InsertPostLike(userID int, postID int) {
+    _, err := database.Exec(`INSERT INTO post_likes (user_id, post_id, post_is_like) VALUES (?, ?, ?)`, userID, postID, true)
+    if err != nil {
+        log.Fatal(err)
+    }
+}
+
+func InsertPostDislike(userID int, postID int) {
+    _, err := database.Exec(`INSERT INTO post_dislikes (user_id, post_id, post_is_dislike) VALUES (?, ?, ?)`, userID, postID, true)
+    if err != nil {
+        log.Fatal(err)
+    }
+}
+
+//---
 
 func handleReg(w http.ResponseWriter, r *http.Request) {
 	var successMessage string
@@ -555,154 +632,154 @@ func getCommentsByPostID(postID int) ([]forum.Comment, error) {
 	return comments, nil
 }
 
-func handleLikePost(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodPost {
-		session, err := getSession(r)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
+// func handleLikePost(w http.ResponseWriter, r *http.Request) {
+// 	if r.Method == http.MethodPost {
+// 		session, err := getSession(r)
+// 		if err != nil {
+// 			http.Error(w, err.Error(), http.StatusInternalServerError)
+// 			return
+// 		}
 
-		userId, ok := session.Values["user_id"].(int)
-		if !ok || userId == 0 {
-			http.Error(w, "You must be registered to like a post.", http.StatusUnauthorized)
-			return
-		}
+// 		userId, ok := session.Values["user_id"].(int)
+// 		if !ok || userId == 0 {
+// 			http.Error(w, "You must be registered to like a post.", http.StatusUnauthorized)
+// 			return
+// 		}
 
-		postID := r.URL.Query().Get("postID")
-		postIDInt, err := strconv.Atoi(postID)
-		if err != nil {
-			http.Error(w, "Invalid post ID", http.StatusBadRequest)
-			return
-		}
+// 		postID := r.URL.Query().Get("postID")
+// 		postIDInt, err := strconv.Atoi(postID)
+// 		if err != nil {
+// 			http.Error(w, "Invalid post ID", http.StatusBadRequest)
+// 			return
+// 		}
 
-		postLike := &forum.PostLike{
-			UserID: userId,
-			PostID: postIDInt,
-			IsLike: true,
-		}
+// 		postLike := &forum.PostLike{
+// 			UserID: userId,
+// 			PostID: postIDInt,
+// 			IsLike: true,
+// 		}
 
-		err = forum.InsertPostLike(database, postLike)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
+// 		err = forum.InsertPostLike("forum.db", postLike)
+// 		if err != nil {
+// 			http.Error(w, err.Error(), http.StatusInternalServerError)
+// 			return
+// 		}
 
-		http.Redirect(w, r, "/registered", http.StatusSeeOther)
-		return
-	}
-}
+// 		http.Redirect(w, r, "/registered", http.StatusSeeOther)
+// 		return
+// 	}
+// }
 
-func handleDislikePost(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodPost {
-		session, err := getSession(r)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
+// func handleDislikePost(w http.ResponseWriter, r *http.Request) {
+// 	if r.Method == http.MethodPost {
+// 		session, err := getSession(r)
+// 		if err != nil {
+// 			http.Error(w, err.Error(), http.StatusInternalServerError)
+// 			return
+// 		}
 
-		userId, ok := session.Values["user_id"].(int)
-		if !ok || userId == 0 {
-			http.Error(w, "You must be registered to dislike a post.", http.StatusUnauthorized)
-			return
-		}
+// 		userId, ok := session.Values["user_id"].(int)
+// 		if !ok || userId == 0 {
+// 			http.Error(w, "You must be registered to dislike a post.", http.StatusUnauthorized)
+// 			return
+// 		}
 
-		postID := r.URL.Query().Get("postID")
-		postIDInt, err := strconv.Atoi(postID)
-		if err != nil {
-			http.Error(w, "Invalid post ID", http.StatusBadRequest)
-			return
-		}
+// 		postID := r.URL.Query().Get("postID")
+// 		postIDInt, err := strconv.Atoi(postID)
+// 		if err != nil {
+// 			http.Error(w, "Invalid post ID", http.StatusBadRequest)
+// 			return
+// 		}
 
-		postDislike := &forum.PostDislike{
-			UserID:    userId,
-			PostID:    postIDInt,
-			IsDislike: true,
-		}
+// 		postDislike := &forum.PostDislike{
+// 			UserID:    userId,
+// 			PostID:    postIDInt,
+// 			IsDislike: true,
+// 		}
 
-		err = forum.InsertPostDislike(database, postDislike)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
+// 		err = forum.InsertPostDislike("forum.db", postDislike)
+// 		if err != nil {
+// 			http.Error(w, err.Error(), http.StatusInternalServerError)
+// 			return
+// 		}
 
-		http.Redirect(w, r, "/registered", http.StatusSeeOther)
-		return
-	}
-}
+// 		http.Redirect(w, r, "/registered", http.StatusSeeOther)
+// 		return
+// 	}
+// }
 
-func handleLikeComment(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodPost {
-		session, err := getSession(r)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
+// func handleLikeComment(w http.ResponseWriter, r *http.Request) {
+// 	if r.Method == http.MethodPost {
+// 		session, err := getSession(r)
+// 		if err != nil {
+// 			http.Error(w, err.Error(), http.StatusInternalServerError)
+// 			return
+// 		}
 
-		userId, ok := session.Values["user_id"].(int)
-		if !ok || userId == 0 {
-			http.Error(w, "You must be registered to like a comment.", http.StatusUnauthorized)
-			return
-		}
+// 		userId, ok := session.Values["user_id"].(int)
+// 		if !ok || userId == 0 {
+// 			http.Error(w, "You must be registered to like a comment.", http.StatusUnauthorized)
+// 			return
+// 		}
 
-		commentID := r.URL.Query().Get("commentID")
-		commentIDInt, err := strconv.Atoi(commentID)
-		if err != nil {
-			http.Error(w, "Invalid comment ID", http.StatusBadRequest)
-			return
-		}
+// 		commentID := r.URL.Query().Get("commentID")
+// 		commentIDInt, err := strconv.Atoi(commentID)
+// 		if err != nil {
+// 			http.Error(w, "Invalid comment ID", http.StatusBadRequest)
+// 			return
+// 		}
 
-		commentLike := &forum.CommentLike{
-			UserID:    userId,
-			CommentID: commentIDInt,
-			IsLike:    true,
-		}
+// 		commentLike := &forum.CommentLike{
+// 			UserID:    userId,
+// 			CommentID: commentIDInt,
+// 			IsLike:    true,
+// 		}
 
-		err = forum.InsertCommentLike(database, commentLike)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
+// 		err = forum.InsertCommentLike("forum.db", commentLike)
+// 		if err != nil {
+// 			http.Error(w, err.Error(), http.StatusInternalServerError)
+// 			return
+// 		}
 
-		http.Redirect(w, r, "/registered", http.StatusSeeOther)
-		return
-	}
-}
+// 		http.Redirect(w, r, "/registered", http.StatusSeeOther)
+// 		return
+// 	}
+// }
 
-func handleDislikeComment(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodPost {
-		session, err := getSession(r)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
+// func handleDislikeComment(w http.ResponseWriter, r *http.Request) {
+// 	if r.Method == http.MethodPost {
+// 		session, err := getSession(r)
+// 		if err != nil {
+// 			http.Error(w, err.Error(), http.StatusInternalServerError)
+// 			return
+// 		}
 
-		userId, ok := session.Values["user_id"].(int)
-		if !ok || userId == 0 {
-			http.Error(w, "You must be registered to dislike a comment.", http.StatusUnauthorized)
-			return
-		}
+// 		userId, ok := session.Values["user_id"].(int)
+// 		if !ok || userId == 0 {
+// 			http.Error(w, "You must be registered to dislike a comment.", http.StatusUnauthorized)
+// 			return
+// 		}
 
-		commentID := r.URL.Query().Get("commentID")
-		commentIDInt, err := strconv.Atoi(commentID)
-		if err != nil {
-			http.Error(w, "Invalid comment ID", http.StatusBadRequest)
-			return
-		}
+// 		commentID := r.URL.Query().Get("commentID")
+// 		commentIDInt, err := strconv.Atoi(commentID)
+// 		if err != nil {
+// 			http.Error(w, "Invalid comment ID", http.StatusBadRequest)
+// 			return
+// 		}
 
-		commentDislike := &forum.CommentDislike{
-			UserID:    userId,
-			CommentID: commentIDInt,
-			IsDislike: true,
-		}
+// 		commentDislike := &forum.CommentDislike{
+// 			UserID:    userId,
+// 			CommentID: commentIDInt,
+// 			IsDislike: true,
+// 		}
 
-		err = forum.InsertCommentDislike(database, commentDislike)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
+// 		err = forum.InsertCommentDislike(database, commentDislike)
+// 		if err != nil {
+// 			http.Error(w, err.Error(), http.StatusInternalServerError)
+// 			return
+// 		}
 
-		http.Redirect(w, r, "/registered", http.StatusSeeOther)
-		return
-	}
-}
+// 		http.Redirect(w, r, "/registered", http.StatusSeeOther)
+// 		return
+// 	}
+// }
