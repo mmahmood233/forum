@@ -1,8 +1,9 @@
 package main
 
 import (
-	"context"
+	// "context"
 	"database/sql"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"html/template"
@@ -11,8 +12,8 @@ import (
 	"net/http"
 	"os"
 	"time"
-
-	// "crypto/rand"
+	"errors"
+	"crypto/rand"
 	"strconv"
 
 	_ "modernc.org/sqlite"
@@ -23,6 +24,10 @@ import (
 )
 
 var database *sql.DB
+var sessionStore = sessions.NewCookieStore([]byte("your-secret-key-here"))
+var session = make(map[string]*forum.Session)
+
+
 
 func main() {
 	// Serve static files
@@ -35,8 +40,8 @@ func main() {
 	http.HandleFunc("/registered", parseReg)
 
 	http.HandleFunc("/doRegister", handleReg)
-	// http.HandleFunc("/doLogin", handleLog)
-	http.Handle("/doLogin", sessionMiddleware(http.HandlerFunc(handleLog)))
+	http.HandleFunc("/doLogin", handleLog)
+	// http.Handle("/doLogin", sessionMiddleware(http.HandlerFunc(handleLog)))
 	http.HandleFunc("/createP", createPost)
 	http.HandleFunc("/createC", createComment)
 	http.HandleFunc("/feedback", feedbackHandler)
@@ -49,6 +54,8 @@ func main() {
 	// http.HandleFunc("/createP", createPost)
 
 	// Initialize the database
+	// session = make(map[string]*forum.Session)
+
 
 	var err error
 	database, err = sql.Open("sqlite", "./temp/forum.db")
@@ -64,8 +71,8 @@ func main() {
 	}
 
 	// Start the web server
-	log.Println("Starting server on :8801")
-	err = http.ListenAndServe(":8801", nil)
+	log.Println("Starting server on :8800")
+	err = http.ListenAndServe(":8800", nil)
 	if err != nil {
 		log.Fatalf("Failed to start server: %v", err)
 	}
@@ -214,59 +221,51 @@ func handleReg(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleLog(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodPost {
-		email := r.FormValue("email2")
-		password := r.FormValue("password2")
+    if r.Method == http.MethodPost {
+        email := r.FormValue("email2")
+        password := r.FormValue("password2")
 
-		log.Printf("Received form data: email=%s, password=%s\n", email, password)
+        log.Printf("Received form data: email=%s, password=%s\n", email, password)
 
-		// Authenticate the user (e.g., check the email and password)
-		user, err := forum.ValByEmail(database, email)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
+        // Authenticate the user (e.g., check the email and password)
+        user, err := forum.ValByEmail(database, email)
+        if err != nil {
+            http.Error(w, err.Error(), http.StatusInternalServerError)
+            return
+        }
+
+        if user == nil || user.Password != password {
+            http.Error(w, "Invalid email or password", http.StatusUnauthorized)
+            return
+        }
+
+        // Create a new session for the user
+        sessionID := createSession(w, user.UserID)
+
+        // Store the user ID in the session
+		session[sessionID] = &forum.Session{
+			UserID: user.UserID,
+			ExpiresAt: time.Now().Add(time.Hour * 24),
 		}
 
-		if user == nil || user.Password != password {
-			http.Error(w, "Invalid email or password", http.StatusUnauthorized)
-			return
-		}
+        // Redirect the user to the home page or another page
+        http.Redirect(w, r, "/registered", http.StatusSeeOther)
+        return
+    }
 
-		// Create a new session for the user
-		session, err := getSession(r)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
+    // Parse the HTML template file
+    tmpl, err := template.ParseFiles("temp/loginPage.html")
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
 
-		// Set the user ID in the session data
-		session.Values["user_id"] = user.UserID
-
-		// Set the session expiration time (e.g., 24 hours)
-		session.Options.MaxAge = 24 * 60 * 60
-
-		// Save the session
-		err = session.Save(r, w)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		// Redirect the user to the home page or another page
-		http.Redirect(w, r, "/registered", http.StatusSeeOther)
-		return
-	}
-
-	// Parse the HTML template file
-	tmpl, err := template.ParseFiles("temp/loginPage.html")
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	// Render the template
-	tmpl.Execute(w, nil)
+    // Render the template
+    tmpl.Execute(w, nil)
 }
+
+
+
 
 func parseMain(w http.ResponseWriter, r *http.Request) {
 	// Retrieve posts from the database
@@ -306,114 +305,109 @@ func parseReg(w http.ResponseWriter, r *http.Request) {
 	tmpl.Execute(w, posts)
 }
 
-// func getPosts() ([]struct {
-//     Post forum.Post
-//     User forum.User
-// }, error) {
-//     query := `
-//         SELECT p.user_id, p.post_content, p.post_created_at, u.username
-//         FROM posts p
-//         JOIN users u ON p.user_id = u.user_id
-//     `
-
-//     rows, err := database.Query(query)
-//     if err != nil {
-//         return nil, err
-//     }
-//     defer rows.Close()
-
-//     var postsWithUsers []struct {
-//         Post forum.Post
-//         User forum.User
-//     }
-
-//     for rows.Next() {
-//         var p forum.Post
-//         var u forum.User
-
-//         if err := rows.Scan(&p.UserID, &p.PostContent, &p.CreatedAt, &u.Username); err != nil {
-//             return nil, err
-//         }
-
-//         postsWithUsers = append(postsWithUsers, struct {
-//             Post forum.Post
-//             User forum.User
-//         }{p, u})
-//     }
-
-//     if err := rows.Err(); err != nil {
-//         return nil, err
-//     }
-
-//     return postsWithUsers, nil
-// }
-
-// func createKey() ([]byte, error) {
-//     key := make([]byte, 32)
-//     _, err := rand.Read(key)
-//     if err != nil {
-//         return nil, err
-//     }
-//     return key, nil
-// }
-
-var (
-	// Create a new session store
-	store       = sessions.NewCookieStore([]byte("your-secret-key"))
-	sessionName = "forum-session"
-)
-
-func sessionMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Get the session from the request
-		session, err := store.Get(r, "session-name")
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		// Save the session data in the request context
-		ctx := context.WithValue(r.Context(), "session", session)
-		next.ServeHTTP(w, r.WithContext(ctx))
-	})
+func getSessionID() string {
+	key := make([]byte, 32)
+	if _, err := rand.Read(key); err != nil {
+		return ""
+	}
+	return base64.URLEncoding.EncodeToString(key)
 }
 
+var sessionData = make(map[string]*forum.Session)
+
+func createSession(w http.ResponseWriter, userID int) string {
+    sessionID := getSessionID()
+    sessionObj := &forum.Session{
+        SessionID: sessionID,
+        UserID:    userID,
+        ExpiresAt: time.Now().Add(24 * time.Hour), // Set the expiration time (e.g., 24 hours)
+    }
+    sessionData[sessionID] = sessionObj
+
+    cookie := http.Cookie{
+        Name:     "session_id",
+        Value:    sessionID,
+        Path:     "/",
+        HttpOnly: true,
+    }
+
+    http.SetCookie(w, &cookie)
+
+    // Insert the session data into the database
+    _, err := database.Exec("INSERT INTO sessions (session_id, user_id, expires_at) VALUES (?, ?, ?)", sessionID, userID, sessionObj.ExpiresAt)
+    if err != nil {
+        log.Printf("Error inserting session data: %v", err)
+        // You may want to handle the error more gracefully here
+    }
+
+    return sessionID
+}
+
+
+func getSession(r *http.Request) (*forum.Session, error) {
+    cookie, err := r.Cookie("session_id")
+    if err != nil {
+        return nil, err
+    }
+    sessionID := cookie.Value
+
+    // Query the database for the session data
+    var userID int
+    var expiresAt time.Time
+    err = database.QueryRow("SELECT user_id, expires_at FROM sessions WHERE session_id = ?", sessionID).Scan(&userID, &expiresAt)
+    if err != nil {
+        if err == sql.ErrNoRows {
+            return nil, errors.New("invalid session")
+        }
+        return nil, err
+    }
+
+    sessionObj := &forum.Session{
+        SessionID: sessionID,
+        UserID:    userID,
+        ExpiresAt: expiresAt,
+    }
+
+    return sessionObj, nil
+}
+
+
 func createPost(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodPost {
-		session, err := getSession(r)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
+    if r.Method == http.MethodPost {
+        sessionObj, err := getSession(r)
+        if err != nil {
+            http.Error(w, err.Error(), http.StatusInternalServerError)
+            return
+        }
 
-		postContent := r.FormValue("postCont")
+        postContent := r.FormValue("postCont")
 
-		// Create a new Post struct
-		post := &forum.Post{
-			UserID:      session.Values["user_id"].(int),
-			PostContent: postContent,
-			CreatedAt:   time.Now(),
-		}
+        // Create a new Post struct
+        post := &forum.Post{
+            UserID:      sessionObj.UserID,
+            PostContent: postContent,
+            CreatedAt:   time.Now(),
+        }
 
-		// Insert the post into the database
-		err = insertPost(post)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
+        // Insert the post into the database
+        err = insertPost(post)
+        if err != nil {
+            http.Error(w, err.Error(), http.StatusInternalServerError)
+            return
+        }
 
-		http.Redirect(w, r, "/registered", http.StatusSeeOther)
-		return
-	}
+        http.Redirect(w, r, "/registered", http.StatusSeeOther)
+        return
+    }
 
-	tmpl, err := template.ParseFiles("temp/comPage.html")
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+    tmpl, err := template.ParseFiles("temp/comPage.html")
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
 
-	// Render the template
-	tmpl.Execute(w, nil)
+    // Render the template
+    tmpl.Execute(w, nil)
 }
 
 func insertPost(post *forum.Post) error {
@@ -431,68 +425,6 @@ func insertPost(post *forum.Post) error {
 	return nil
 }
 
-func getSession(r *http.Request) (*sessions.Session, error) {
-	// Get the session from the request
-	session, err := store.Get(r, sessionName)
-	if err != nil {
-		return nil, err
-	}
-
-	return session, nil
-}
-
-// func openDB() (*sql.DB, error) {
-//     if database == nil {
-//         var err error
-//         database, err = sql.Open("sqlite", "./temp/forum.db")
-//         if err != nil {
-//             return nil, err
-//         }
-//     }
-//     return database, nil
-// }
-
-// func createComment(w http.ResponseWriter, r *http.Request) {
-//     if r.Method == http.MethodPost {
-//         session, err := getSession(r)
-//         if err != nil {
-//             http.Error(w, err.Error(), http.StatusInternalServerError)
-//             return
-//         }
-//         comContent := r.FormValue("commentCont")
-
-//                // Print the session data
-//                fmt.Printf("Session Data:\n")
-//                fmt.Printf("  User ID: %v\n", session.Values["user_id"])
-//                fmt.Printf("  Post ID: %v\n", session.Values["post_id"])
-
-//                // Print the comment content
-//                fmt.Printf("Comment Content: %s\n", comContent)
-
-//         comment := &forum.Comment{
-//             UserID:      session.Values["user_id"].(int),
-//             PostID:      session.Values["post_id"].(int),
-//             CommentContent: comContent,
-//             CreatedAt:   time.Now(),
-//     }
-
-//     fmt.Printf("Comment Struct:\n")
-//     fmt.Printf("  User ID: %d\n", comment.UserID)
-//     fmt.Printf("  Post ID: %d\n", comment.PostID)
-//     fmt.Printf("  Comment Content: %s\n", comment.CommentContent)
-//     fmt.Printf("  Created At: %v\n", comment.CreatedAt)
-
-//     err = insertComment(comment)
-//     if err != nil {
-//         http.Error(w, err.Error(), http.StatusInternalServerError)
-//         return
-//     }
-
-//     http.Redirect(w, r, "/", http.StatusSeeOther)
-//     return
-// }
-// }
-
 func insertComment(comment *forum.Comment) error {
 	stmt, err := database.Prepare("INSERT INTO comments (user_id, post_id, comment_content, comment_created_at) VALUES (?, ?, ?, ?)")
 	if err != nil {
@@ -508,45 +440,41 @@ func insertComment(comment *forum.Comment) error {
 }
 
 func createComment(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodPost {
-		session, err := getSession(r)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
+    if r.Method == http.MethodPost {
+        session, err := getSession(r)
+        if err != nil {
+            http.Error(w, err.Error(), http.StatusInternalServerError)
+            return
+        }
 
-		userId, ok := session.Values["user_id"].(int)
-		if !ok || userId == 0 {
-			http.Error(w, "You must be registered to comment.", http.StatusUnauthorized)
-			return
-		}
+        userID := session.UserID
 
-		comContent := r.FormValue("commentCont")
-		postID := r.URL.Query().Get("postID")
+        comContent := r.FormValue("commentCont")
+        postID := r.URL.Query().Get("postID")
 
-		// Convert postID from string to int
-		postIDInt, err := strconv.Atoi(postID)
-		if err != nil {
-			http.Error(w, "Invalid post ID", http.StatusBadRequest)
-			return
-		}
+        // Convert postID from string to int
+        postIDInt, err := strconv.Atoi(postID)
+        if err != nil {
+            http.Error(w, "Invalid post ID", http.StatusBadRequest)
+            return
+        }
 
-		comment := &forum.Comment{
-			UserID:         userId,
-			PostID:         postIDInt,
-			CommentContent: comContent,
-			CreatedAt:      time.Now(),
-		}
+        comment := &forum.Comment{
+            UserID:         userID,
+            PostID:         postIDInt,
+            CommentContent: comContent,
+            CreatedAt:      time.Now(),
+        }
 
-		err = insertComment(comment)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
+        err = insertComment(comment)
+        if err != nil {
+            http.Error(w, err.Error(), http.StatusInternalServerError)
+            return
+        }
 
-		http.Redirect(w, r, "/registered", http.StatusSeeOther)
-		return
-	}
+        http.Redirect(w, r, "/registered", http.StatusSeeOther)
+        return
+    }
 }
 
 func getPosts() ([]struct {
@@ -631,155 +559,3 @@ func getCommentsByPostID(postID int) ([]forum.Comment, error) {
 
 	return comments, nil
 }
-
-// func handleLikePost(w http.ResponseWriter, r *http.Request) {
-// 	if r.Method == http.MethodPost {
-// 		session, err := getSession(r)
-// 		if err != nil {
-// 			http.Error(w, err.Error(), http.StatusInternalServerError)
-// 			return
-// 		}
-
-// 		userId, ok := session.Values["user_id"].(int)
-// 		if !ok || userId == 0 {
-// 			http.Error(w, "You must be registered to like a post.", http.StatusUnauthorized)
-// 			return
-// 		}
-
-// 		postID := r.URL.Query().Get("postID")
-// 		postIDInt, err := strconv.Atoi(postID)
-// 		if err != nil {
-// 			http.Error(w, "Invalid post ID", http.StatusBadRequest)
-// 			return
-// 		}
-
-// 		postLike := &forum.PostLike{
-// 			UserID: userId,
-// 			PostID: postIDInt,
-// 			IsLike: true,
-// 		}
-
-// 		err = forum.InsertPostLike("forum.db", postLike)
-// 		if err != nil {
-// 			http.Error(w, err.Error(), http.StatusInternalServerError)
-// 			return
-// 		}
-
-// 		http.Redirect(w, r, "/registered", http.StatusSeeOther)
-// 		return
-// 	}
-// }
-
-// func handleDislikePost(w http.ResponseWriter, r *http.Request) {
-// 	if r.Method == http.MethodPost {
-// 		session, err := getSession(r)
-// 		if err != nil {
-// 			http.Error(w, err.Error(), http.StatusInternalServerError)
-// 			return
-// 		}
-
-// 		userId, ok := session.Values["user_id"].(int)
-// 		if !ok || userId == 0 {
-// 			http.Error(w, "You must be registered to dislike a post.", http.StatusUnauthorized)
-// 			return
-// 		}
-
-// 		postID := r.URL.Query().Get("postID")
-// 		postIDInt, err := strconv.Atoi(postID)
-// 		if err != nil {
-// 			http.Error(w, "Invalid post ID", http.StatusBadRequest)
-// 			return
-// 		}
-
-// 		postDislike := &forum.PostDislike{
-// 			UserID:    userId,
-// 			PostID:    postIDInt,
-// 			IsDislike: true,
-// 		}
-
-// 		err = forum.InsertPostDislike("forum.db", postDislike)
-// 		if err != nil {
-// 			http.Error(w, err.Error(), http.StatusInternalServerError)
-// 			return
-// 		}
-
-// 		http.Redirect(w, r, "/registered", http.StatusSeeOther)
-// 		return
-// 	}
-// }
-
-// func handleLikeComment(w http.ResponseWriter, r *http.Request) {
-// 	if r.Method == http.MethodPost {
-// 		session, err := getSession(r)
-// 		if err != nil {
-// 			http.Error(w, err.Error(), http.StatusInternalServerError)
-// 			return
-// 		}
-
-// 		userId, ok := session.Values["user_id"].(int)
-// 		if !ok || userId == 0 {
-// 			http.Error(w, "You must be registered to like a comment.", http.StatusUnauthorized)
-// 			return
-// 		}
-
-// 		commentID := r.URL.Query().Get("commentID")
-// 		commentIDInt, err := strconv.Atoi(commentID)
-// 		if err != nil {
-// 			http.Error(w, "Invalid comment ID", http.StatusBadRequest)
-// 			return
-// 		}
-
-// 		commentLike := &forum.CommentLike{
-// 			UserID:    userId,
-// 			CommentID: commentIDInt,
-// 			IsLike:    true,
-// 		}
-
-// 		err = forum.InsertCommentLike("forum.db", commentLike)
-// 		if err != nil {
-// 			http.Error(w, err.Error(), http.StatusInternalServerError)
-// 			return
-// 		}
-
-// 		http.Redirect(w, r, "/registered", http.StatusSeeOther)
-// 		return
-// 	}
-// }
-
-// func handleDislikeComment(w http.ResponseWriter, r *http.Request) {
-// 	if r.Method == http.MethodPost {
-// 		session, err := getSession(r)
-// 		if err != nil {
-// 			http.Error(w, err.Error(), http.StatusInternalServerError)
-// 			return
-// 		}
-
-// 		userId, ok := session.Values["user_id"].(int)
-// 		if !ok || userId == 0 {
-// 			http.Error(w, "You must be registered to dislike a comment.", http.StatusUnauthorized)
-// 			return
-// 		}
-
-// 		commentID := r.URL.Query().Get("commentID")
-// 		commentIDInt, err := strconv.Atoi(commentID)
-// 		if err != nil {
-// 			http.Error(w, "Invalid comment ID", http.StatusBadRequest)
-// 			return
-// 		}
-
-// 		commentDislike := &forum.CommentDislike{
-// 			UserID:    userId,
-// 			CommentID: commentIDInt,
-// 			IsDislike: true,
-// 		}
-
-// 		err = forum.InsertCommentDislike(database, commentDislike)
-// 		if err != nil {
-// 			http.Error(w, err.Error(), http.StatusInternalServerError)
-// 			return
-// 		}
-
-// 		http.Redirect(w, r, "/registered", http.StatusSeeOther)
-// 		return
-// 	}
-// }
