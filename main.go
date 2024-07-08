@@ -42,7 +42,7 @@ func main() {
 	http.HandleFunc("/doRegister", handleReg)
 	http.HandleFunc("/doLogin", handleLog)
 	// http.Handle("/doLogin", sessionMiddleware(http.HandlerFunc(handleLog)))
-	// http.HandleFunc("/doLogout", logout)
+	http.HandleFunc("/doLogout", logout)
 	http.HandleFunc("/createP", createPost)
 	http.HandleFunc("/createC", createComment)
 	http.HandleFunc("/feedback", feedbackHandler)
@@ -265,33 +265,40 @@ func handleLog(w http.ResponseWriter, r *http.Request) {
     tmpl.Execute(w, nil)
 }
 
-// func logout(w http.ResponseWriter, r *http.Request) {
-//     if r == nil || w == nil {
-//         http.Error(w, "Invalid request or response", http.StatusBadRequest)
-//         return
-//     }
+func logout(w http.ResponseWriter, r *http.Request) {
+    //Check if session and cookies exists and if yes delete it
+	sessionID := r.URL.Query().Get("session_id")
+	if sessionID!= "" {
+		delete(session, sessionID)
+		// removeSessionDB(sessionID)
+	}
+	_, err := r.Cookie("session_id")
+	if err == nil {
+		http.SetCookie(w, &http.Cookie{
+			Name:    "session_id",
+			Value:   "",
+			Expires: time.Unix(0, 0),
+		})
+	}
+	http.Redirect(w, r, "/doLogin", http.StatusSeeOther)
+	return
+}
 
-//     // Get the session from the request
-//     session, err := getSession(r)
+// func removeSessionDB(sessionID string) error {
+//     // Prepare the SQL query
+//     stmt, err := database.Prepare("DELETE session_id, expires_at FROM sessions WHERE session_id = ?")
 //     if err != nil {
-//         http.Error(w, err.Error(), http.StatusInternalServerError)
-//         return
+//         return err
 //     }
+//     defer stmt.Close()
 
-//     // Remove the session data from the server-side session store
-//     sessionID := session.SessionID
-//     delete(sessionData, sessionID)
-
-//     // Delete the session cookie from the client-side
-//     session.Options.MaxAge = -1 // Set the MaxAge to -1 to delete the cookie
-//     err = sessions.Save(r, w)
+//     // Execute the query
+//     _, err = stmt.Exec(sessionID)
 //     if err != nil {
-//         http.Error(w, err.Error(), http.StatusInternalServerError)
-//         return
+//         return err
 //     }
 
-//     // Redirect the user to the login page or any other desired page
-//     http.Redirect(w, r, "/doLogin", http.StatusSeeOther)
+//     return nil
 // }
 
 
@@ -308,6 +315,7 @@ func isLoggedIn(r *http.Request) bool {
     }
 
     return true
+	
 }
 
 
@@ -402,9 +410,6 @@ func createSession(w http.ResponseWriter, userID int) string {
         SessionID: sessionID,
         UserID:    userID,
         ExpiresAt: time.Now().Add(24 * time.Hour), // Set the expiration time (e.g., 24 hours)
-        Options: &sessions.Options{
-            MaxAge: 24 * 60 * 60, // Set the MaxAge to 24 hours
-        },
     }
     sessionData[sessionID] = sessionObj
 

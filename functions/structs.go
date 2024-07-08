@@ -2,8 +2,6 @@ package forum
 
 import (
     "time"
-
-    // "github.com/gorilla/sessions"
 )
 
 type User struct {
@@ -79,5 +77,4 @@ type Session struct {
     SessionID string
     UserID    int
     ExpiresAt time.Time
-    // Options   *sessions.Options 
 }
