@@ -266,40 +266,76 @@ func handleLog(w http.ResponseWriter, r *http.Request) {
 }
 
 func logout(w http.ResponseWriter, r *http.Request) {
-    //Check if session and cookies exists and if yes delete it
-	sessionID := r.URL.Query().Get("session_id")
-	if sessionID!= "" {
-		delete(session, sessionID)
-		// removeSessionDB(sessionID)
-	}
-	_, err := r.Cookie("session_id")
-	if err == nil {
-		http.SetCookie(w, &http.Cookie{
-			Name:    "session_id",
-			Value:   "",
-			Expires: time.Unix(0, 0),
-		})
-	}
-	http.Redirect(w, r, "/doLogin", http.StatusSeeOther)
-	return
+    // Retrieve session ID from the cookie
+    cookie, err := r.Cookie("session_id")
+    if err != nil {
+        log.Printf("No session cookie found: %v", err)
+    } else {
+        sessionID := cookie.Value
+        log.Printf("Session ID to delete: %s", sessionID)
+
+        if sessionID != "" {
+            // Attempt to delete session from in-memory store
+            delete(session, sessionID)
+            log.Printf("Session deleted from memory: %s", sessionID)
+            
+            // Attempt to delete session from the database
+            err := removeSessionDB(sessionID)
+            if err != nil {
+                log.Printf("Error deleting session from database: %v", err)
+            } else {
+                log.Printf("Session deleted from database: %s", sessionID)
+            }
+        }
+
+        // Clear the session cookie
+        http.SetCookie(w, &http.Cookie{
+            Name:    "session_id",
+            Value:   "",
+            Expires: time.Unix(0, 0),
+        })
+        log.Printf("Session cookie cleared: %s", sessionID)
+    }
+
+    // Redirect to the login page
+    http.Redirect(w, r, "/doLogin", http.StatusSeeOther)
 }
 
-// func removeSessionDB(sessionID string) error {
-//     // Prepare the SQL query
-//     stmt, err := database.Prepare("DELETE session_id, expires_at FROM sessions WHERE session_id = ?")
-//     if err != nil {
-//         return err
-//     }
-//     defer stmt.Close()
 
-//     // Execute the query
-//     _, err = stmt.Exec(sessionID)
-//     if err != nil {
-//         return err
-//     }
+func removeSessionDB(sessionID string) error {
+    log.Printf("Attempting to remove session from database: %s", sessionID)
 
-//     return nil
-// }
+    // Prepare the SQL query
+    stmt, err := database.Prepare("DELETE FROM sessions WHERE session_id = ?")
+    if err != nil {
+        log.Printf("Error preparing delete statement: %v", err)
+        return err
+    }
+    defer stmt.Close()
+
+    // Execute the query
+    res, err := stmt.Exec(sessionID)
+    if err != nil {
+        log.Printf("Error executing delete statement: %v", err)
+        return err
+    }
+
+    // Check how many rows were affected
+    rowsAffected, err := res.RowsAffected()
+    if err != nil {
+        log.Printf("Error fetching rows affected: %v", err)
+        return err
+    }
+
+    if rowsAffected == 0 {
+        log.Printf("No rows affected, session ID may not exist: %s", sessionID)
+    } else {
+        log.Printf("Rows affected: %d", rowsAffected)
+    }
+
+    return nil
+}
+
 
 
 func isLoggedIn(r *http.Request) bool {
