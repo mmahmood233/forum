@@ -1,6 +1,10 @@
 package forum
 
-import "time"
+import (
+    "time"
+
+    // "github.com/gorilla/sessions"
+)
 
 type User struct {
     UserID   int
@@ -75,4 +79,5 @@ type Session struct {
     SessionID string
     UserID    int
     ExpiresAt time.Time
+    // Options   *sessions.Options 
 }

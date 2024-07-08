@@ -69,73 +69,106 @@
             color: red;
         }
         .cont {
-                table-layout: left; 
+                table-layout: left;
         }
     </style>
 </head>
 <body>
-    <header>
-        <h1>MAIN</h1>
-        <table id="cont">
-            <tr><button><a href="doLogin">Login</a></button></tr>
-            <tr><button><a href="doRegister">Register</a></button></tr>
-            <tr><button><a href="createP">Create Post</a></button></tr>
-        </table>
-    </header>
+  <header>
+      <h1>MAIN</h1>
+      {{if .IsLoggedIn}}
+      <table id="cont">
+          <tr><button><a href="doLogin">Login</a></button></tr>
+          <tr><button><a href="doRegister">Register</a></button></tr>
+          <tr><button><a href="doLogout">Logout</a></button></tr>
+          <tr><button><a href="createP">Create Post</a></button></tr>
+      </table>
+      {{end}}
+  </header>
 
-    <div class="container">
-        <div class="post-container">
-            
-            {{range .}}
-            <div class="post">
-                <h3>{{.User.Username}}</h3>
-                <p>{{.Post.PostContent}}</p>
-                <small>Posted on: {{.Post.CreatedAt}}</small>
-                <script src="https://use.fontawesome.com/fe459689b4.js"></script>
-                                <br>
-                            <button class="btn" id="green" data-count="0"><i class="fa fa-thumbs-up fa-lg" aria-hidden="true"></i> <span class="count">0</span></button>
-                            <button class="btn" id="red" data-count="0"><i class="fa fa-thumbs-down fa-lg" aria-hidden="true"></i> <span class="count">0</span></button>
-                <form action="/createC?postID={{.Post.PostID}}" method="post">
-                    <textarea name="commentCont" placeholder="Comment Content" required></textarea>
-                    <button type="submit">Add Comment</button>
-                </form>
-                <div class="comments">
-                    {{range .Comments}}
-                    <div class="comment">
-                        <p>{{.CommentContent}}</p>
-                        <small>Commented by: {{.Username}} </small><br>
-                        <small>on {{.CreatedAt}}</small>
-                        <script src="https://use.fontawesome.com/fe459689b4.js"></script>
-                                <br>
-                            <button class="btn" id="green" data-count="0"><i class="fa fa-thumbs-up fa-lg" aria-hidden="true"></i> <span class="count">0</span></button>
-                            <button class="btn" id="red" data-count="0"><i class="fa fa-thumbs-down fa-lg" aria-hidden="true"></i> <span class="count">0</span></button>
-                    </div>
-                    {{end}}
-                </div>
-            </div>
-            {{else}}
-            <p>No posts yet.</p>
-            {{end}}
-        </div>
-    </div>
+  <div class="container">
+      <div class="post-container">
+          {{range .Posts}}
+          <div class="post">
+              <h3>{{.User.Username}}</h3>
+              <p>{{.Post.PostContent}}</p>
+              <small>Posted on: {{.Post.CreatedAt}}</small>
+              <script src="https://use.fontawesome.com/fe459689b4.js"></script>
+              <br>
+              <button class="btn" id="green" data-count="0"><i class="fa fa-thumbs-up fa-lg" aria-hidden="true"></i> <span class="count">0</span></button>
+              <button class="btn" id="red" data-count="0"><i class="fa fa-thumbs-down fa-lg" aria-hidden="true"></i> <span class="count">0</span></button>
+              {{if $.IsLoggedIn}}
+              <form action="/createC?postID={{.Post.PostID}}" method="post">
+                  <textarea name="commentCont" placeholder="Comment Content" required></textarea>
+                  <button type="submit">Add Comment</button>
+              </form>
+              {{end}}
+              <div class="comments">
+                  {{range .Comments}}
+                  <div class="comment">
+                      <p>{{.CommentContent}}</p>
+                      <small>Commented by: {{.Username}} </small><br>
+                      <small>on {{.CreatedAt}}</small>
+                      <script src="https://use.fontawesome.com/fe459689b4.js"></script>
+                      <br>
+                      <button class="btn" id="green" data-count="0"><i class="fa fa-thumbs-up fa-lg" aria-hidden="true"></i> <span class="count">0</span></button>
+                      <button class="btn" id="red" data-count="0"><i class="fa fa-thumbs-down fa-lg" aria-hidden="true"></i> <span class="count">0</span></button>
+                  </div>
+                  {{end}}
+              </div>
+          </div>
+          {{else}}
+          <p>No posts yet.</p>
+          {{end}}
+      </div>
+  </div>
+  {{if not .IsLoggedIn}}
+  <div class="container">
+      <div class="post-container">
+          <table>
+              <tr><button><a href="doLogin">Login</a></button></tr>
+              <tr><button><a href="doRegister">Register</a></button></tr>
+          </table>
+          {{range .Posts}}
+          <div class="post">
+              <h3>{{.User.Username}}</h3>
+              <p>{{.Post.PostContent}}</p>
+              <small>Posted on: {{.Post.CreatedAt}}</small>
+              <form action="/createC?postID={{.Post.PostID}}" method="post">
+                  <div class="comments">
+                      {{range .Comments}}
+                      <div class="comment">
+                          <p>{{.CommentContent}}</p>
+                          <small>Commented by: {{.Username}} on {{.CreatedAt}}</small>
+                      </div>
+                      {{end}}
+                  </div>
+              </form>
+          </div>
+          {{else}}
+          <p>No posts yet.</p>
+          {{end}}
+      </div>
+  </div>
+  {{end}}
 
-    <footer>
-        <p>Web Forum &copy; 2024</p>
-    </footer>
+  <footer>
+      <p>Web Forum &copy; 2024</p>
+  </footer>
 </body>
 <script>
     var btns = document.querySelectorAll('.btn');
-    
+   
     btns.forEach(function(btn) {
       btn.setAttribute('data-count', '0');
       btn.querySelector('.count').textContent = '0';
-    
+   
       btn.addEventListener('click', function() {
         var count = parseInt(this.getAttribute('data-count'));
         var greenBtn = this.parentNode.querySelector('#green');
         var redBtn = this.parentNode.querySelector('#red');
         var isPost = this.parentNode.classList.contains('post');
-    
+   
         if (this.id === 'green') {
           if (greenBtn.classList.contains('clicked')) {
             // Green button has already been clicked
@@ -148,14 +181,14 @@
             redBtn.classList.remove('red');
             redBtn.querySelector('.count').textContent = '0';
             redBtn.setAttribute('data-count', '0');
-    
+   
             // Toggle the green button and update the count
             greenBtn.classList.toggle('green');
             count = (count === 0)? 1 : 0;
             greenBtn.setAttribute('data-count', count);
             greenBtn.querySelector('.count').textContent = count;
             greenBtn.classList.add('clicked');
-    
+   
             // Send feedback
             sendFeedback('like', this.parentNode.dataset.id, isPost);
           }
@@ -171,28 +204,28 @@
             greenBtn.classList.remove('green');
             greenBtn.querySelector('.count').textContent = '0';
             greenBtn.setAttribute('data-count', '0');
-    
+   
             // Toggle the red button and update the count
             redBtn.classList.toggle('red');
             count = (count === 0)? 1 : 0;
             redBtn.setAttribute('data-count', count);
             redBtn.querySelector('.count').textContent = count;
             redBtn.classList.add('clicked');
-    
+   
             // Send feedback
             sendFeedback('dislike', this.parentNode.dataset.id, isPost);
           }
         }
-    
+   
         this.setAttribute('data-count', count);
         this.querySelector('.count').textContent = count;
       });
-    
+   
       btn.addEventListener('dblclick', function(event) {
         event.preventDefault();
       });
     });
-    
+   
     function SendFeedback(type, id, isPost) {
       fetch('/feedback', {
         method: 'POST',

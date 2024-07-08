@@ -37,11 +37,12 @@ func main() {
 	http.HandleFunc("/WebServer", forum.WebServer)
 
 	http.HandleFunc("/", parseMain)
-	http.HandleFunc("/registered", parseReg)
+	// http.HandleFunc("/registered", parseReg)
 
 	http.HandleFunc("/doRegister", handleReg)
 	http.HandleFunc("/doLogin", handleLog)
 	// http.Handle("/doLogin", sessionMiddleware(http.HandlerFunc(handleLog)))
+	// http.HandleFunc("/doLogout", logout)
 	http.HandleFunc("/createP", createPost)
 	http.HandleFunc("/createC", createComment)
 	http.HandleFunc("/feedback", feedbackHandler)
@@ -264,46 +265,126 @@ func handleLog(w http.ResponseWriter, r *http.Request) {
     tmpl.Execute(w, nil)
 }
 
+// func logout(w http.ResponseWriter, r *http.Request) {
+//     if r == nil || w == nil {
+//         http.Error(w, "Invalid request or response", http.StatusBadRequest)
+//         return
+//     }
+
+//     // Get the session from the request
+//     session, err := getSession(r)
+//     if err != nil {
+//         http.Error(w, err.Error(), http.StatusInternalServerError)
+//         return
+//     }
+
+//     // Remove the session data from the server-side session store
+//     sessionID := session.SessionID
+//     delete(sessionData, sessionID)
+
+//     // Delete the session cookie from the client-side
+//     session.Options.MaxAge = -1 // Set the MaxAge to -1 to delete the cookie
+//     err = sessions.Save(r, w)
+//     if err != nil {
+//         http.Error(w, err.Error(), http.StatusInternalServerError)
+//         return
+//     }
+
+//     // Redirect the user to the login page or any other desired page
+//     http.Redirect(w, r, "/doLogin", http.StatusSeeOther)
+// }
+
+
+func isLoggedIn(r *http.Request) bool {
+    // Get the session from the request
+    session, err := getSession(r)
+    if err != nil {
+        return false
+    }
+
+    // Check if the session is valid
+    if session == nil || session.ExpiresAt.Before(time.Now()) {
+        return false
+    }
+
+    return true
+}
 
 
 
 func parseMain(w http.ResponseWriter, r *http.Request) {
-	// Retrieve posts from the database
-	posts, err := getPosts()
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+    // Retrieve posts from the database
+    postsWithUsers, err := getPosts()
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
 
-	// Parse the HTML template file
-	tmpl, err := template.ParseFiles("temp/registered.html")
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+    // Check if the user is logged in
+    isLoggedIn := isLoggedIn(r)
 
-	// Render the template with posts data
-	tmpl.Execute(w, posts)
+    // Create a new slice with the expected structure
+    data := make([]struct {
+        Post     forum.Post
+        User     forum.User
+        Comments []forum.Comment
+    }, len(postsWithUsers))
+
+    for i, postWithUser := range postsWithUsers {
+        data[i] = struct {
+            Post     forum.Post
+            User     forum.User
+            Comments []forum.Comment
+        }{
+            Post:     postWithUser.Post,
+            User:     postWithUser.User,
+            Comments: postWithUser.Comments,
+        }
+    }
+
+    // Parse the HTML template file
+    tmpl, err := template.ParseFiles("temp/registered.html")
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+
+    // Define and initialize the anonymous struct
+    templateData := struct {
+        Posts      []struct {
+            Post     forum.Post
+            User     forum.User
+            Comments []forum.Comment
+        }
+        IsLoggedIn bool
+    }{
+        Posts:      data,
+        IsLoggedIn: isLoggedIn,
+    }
+
+    // Render the template with the data
+    tmpl.Execute(w, templateData)
 }
 
-func parseReg(w http.ResponseWriter, r *http.Request) {
-	// Retrieve posts from the database
-	posts, err := getPosts()
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
 
-	// Parse the HTML template file
-	tmpl, err := template.ParseFiles("temp/registered.html")
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+// func parseReg(w http.ResponseWriter, r *http.Request) {
+// 	// Retrieve posts from the database
+// 	posts, err := getPosts()
+// 	if err != nil {
+// 		http.Error(w, err.Error(), http.StatusInternalServerError)
+// 		return
+// 	}
 
-	// Render the template with posts data
-	tmpl.Execute(w, posts)
-}
+// 	// Parse the HTML template file
+// 	tmpl, err := template.ParseFiles("temp/registered.html")
+// 	if err != nil {
+// 		http.Error(w, err.Error(), http.StatusInternalServerError)
+// 		return
+// 	}
+
+// 	// Render the template with posts data
+// 	tmpl.Execute(w, posts)
+// }
 
 func getSessionID() string {
 	key := make([]byte, 32)
@@ -321,6 +402,9 @@ func createSession(w http.ResponseWriter, userID int) string {
         SessionID: sessionID,
         UserID:    userID,
         ExpiresAt: time.Now().Add(24 * time.Hour), // Set the expiration time (e.g., 24 hours)
+        Options: &sessions.Options{
+            MaxAge: 24 * 60 * 60, // Set the MaxAge to 24 hours
+        },
     }
     sessionData[sessionID] = sessionObj
 
