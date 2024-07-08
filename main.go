@@ -558,8 +558,6 @@ func InsertCategory(cat *forum.Category) error {
     return tx.Commit()
 }
 
-
-
 func createPost(w http.ResponseWriter, r *http.Request) {
     if r.Method == http.MethodPost {
         sessionObj, err := getSession(r)
@@ -623,14 +621,8 @@ func insertPost(post *forum.Post) (int64, error) {
         return 0, err
     }
 
-    lastInsertID, err := result.LastInsertId()
-    if err != nil {
-        return 0, err
-    }
-
-    return lastInsertID, nil
+    return result.LastInsertId()
 }
-
 
 func insertComment(comment *forum.Comment) error {
 	stmt, err := database.Prepare("INSERT INTO comments (user_id, post_id, comment_content, comment_created_at) VALUES (?, ?, ?, ?)")

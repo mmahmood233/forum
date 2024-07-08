@@ -63,9 +63,7 @@ CREATE TABLE IF NOT EXISTS comment_dislikes (
 
 CREATE TABLE IF NOT EXISTS categories (
     cat_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    cat_name TEXT NOT NULL UNIQUE,
-    post_id INTEGER NOT NULL,
-    FOREIGN KEY (post_id) REFERENCES posts(post_id)
+    cat_name TEXT NOT NULL UNIQUE
 );
 
 CREATE TABLE IF NOT EXISTS tags (
