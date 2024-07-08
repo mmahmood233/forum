@@ -93,8 +93,15 @@
                 <div class="post">
                     <h2>Create a Post</h2>
                     <form action="/createP" method="post">
-                        <textarea name="postCont" placeholder="Post Content" required></textarea>
-                        <button type="submit">Create Post</button>
+                        <textarea name="postCont" placeholder="Post Content..." required></textarea>
+                        <input type="text" name = "catCont" class="size" autocomplete="off" placeholder="Choose Category..." list="data">
+                        <datalist id = "data">
+                         <option value="Sports">Sports</option>
+                        <option value="News">News</option>
+                        <option value="Others">Others(for now)</option>   
+                        </datalist>
+                        <button type="submit">Create Post</button><br><br>
+                        </form>
                     </form>
                 </div>
             </div>

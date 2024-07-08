@@ -92,6 +92,9 @@
           <div class="post">
               <h3>{{.User.Username}}</h3>
               <p>{{.Post.PostContent}}</p>
+              {{range .Categories}}
+              <p>Category: {{.CatName}}</p>
+              {{end}}
               <small>Posted on: {{.Post.CreatedAt}}</small>
               <script src="https://use.fontawesome.com/fe459689b4.js"></script>
               <br>
@@ -140,6 +143,11 @@
                       <div class="comment">
                           <p>{{.CommentContent}}</p>
                           <small>Commented by: {{.Username}} on {{.CreatedAt}}</small>
+                          <small>on {{.CreatedAt}}</small>
+                          <script src="https://use.fontawesome.com/fe459689b4.js"></script>
+                          <br>
+                          <button class="btn" id="green" data-count="0"><i class="fa fa-thumbs-up fa-lg" aria-hidden="true"></i> <span class="count">0</span></button>
+                          <button class="btn" id="red" data-count="0"><i class="fa fa-thumbs-down fa-lg" aria-hidden="true"></i> <span class="count">0</span></button>
                       </div>
                       {{end}}
                   </div>

@@ -58,8 +58,9 @@ type CommentDislike struct {
 }
 
 type Category struct {
-    ID      int
+    CatID      int
     CatName string
+    PostID     int
 }
 
 type Tag struct {
@@ -78,3 +79,5 @@ type Session struct {
     UserID    int
     ExpiresAt time.Time
 }
+
+

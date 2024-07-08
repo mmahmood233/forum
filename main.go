@@ -44,6 +44,7 @@ func main() {
 	// http.Handle("/doLogin", sessionMiddleware(http.HandlerFunc(handleLog)))
 	http.HandleFunc("/doLogout", logout)
 	http.HandleFunc("/createP", createPost)
+    // http.HandleFunc("createP", ChooseCategory)
 	http.HandleFunc("/createC", createComment)
 	http.HandleFunc("/feedback", feedbackHandler)
 
@@ -369,20 +370,23 @@ func parseMain(w http.ResponseWriter, r *http.Request) {
 
     // Create a new slice with the expected structure
     data := make([]struct {
-        Post     forum.Post
-        User     forum.User
-        Comments []forum.Comment
+        Post       forum.Post
+        User       forum.User
+        Comments   []forum.Comment
+        Categories []forum.Category
     }, len(postsWithUsers))
 
     for i, postWithUser := range postsWithUsers {
         data[i] = struct {
-            Post     forum.Post
-            User     forum.User
-            Comments []forum.Comment
+            Post       forum.Post
+            User       forum.User
+            Comments   []forum.Comment
+            Categories []forum.Category
         }{
-            Post:     postWithUser.Post,
-            User:     postWithUser.User,
-            Comments: postWithUser.Comments,
+            Post:       postWithUser.Post,
+            User:       postWithUser.User,
+            Comments:   postWithUser.Comments,
+            Categories: postWithUser.Categories,
         }
     }
 
@@ -396,9 +400,10 @@ func parseMain(w http.ResponseWriter, r *http.Request) {
     // Define and initialize the anonymous struct
     templateData := struct {
         Posts      []struct {
-            Post     forum.Post
-            User     forum.User
-            Comments []forum.Comment
+            Post       forum.Post
+            User       forum.User
+            Comments   []forum.Comment
+            Categories []forum.Category
         }
         IsLoggedIn bool
     }{
@@ -409,6 +414,7 @@ func parseMain(w http.ResponseWriter, r *http.Request) {
     // Render the template with the data
     tmpl.Execute(w, templateData)
 }
+
 
 
 // func parseReg(w http.ResponseWriter, r *http.Request) {
@@ -496,6 +502,63 @@ func getSession(r *http.Request) (*forum.Session, error) {
     return sessionObj, nil
 }
 
+func ChooseCategory(w http.ResponseWriter, r *http.Request) {
+    // Retrieve posts from the database
+    posts, err := getPosts()
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+    choosenCat := r.FormValue("catCont")
+    category := &forum.Category{
+        CatName : choosenCat,
+        PostID: posts[0].Post.PostID,
+    }
+    err = InsertCategory(category)
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    } else {
+        http.Error(w, "No posts found", http.StatusBadRequest)
+        return
+    }
+}
+
+func InsertCategory(cat *forum.Category) error {
+    tx, err := database.Begin()
+    if err != nil {
+        return err
+    }
+    defer tx.Rollback()
+
+    var catID int64
+    err = tx.QueryRow("SELECT cat_id FROM categories WHERE cat_name = ?", cat.CatName).Scan(&catID)
+    if err != nil {
+        if err == sql.ErrNoRows {
+            // Category doesn't exist, insert it
+            result, err := tx.Exec("INSERT INTO categories (cat_name) VALUES (?)", cat.CatName)
+            if err != nil {
+                return err
+            }
+            catID, err = result.LastInsertId()
+            if err != nil {
+                return err
+            }
+        } else {
+            return err
+        }
+    }
+
+    // Insert the post-category relationship
+    _, err = tx.Exec("INSERT INTO post_categories (post_id, category_id) VALUES (?, ?)", cat.PostID, catID)
+    if err != nil {
+        return err
+    }
+
+    return tx.Commit()
+}
+
+
 
 func createPost(w http.ResponseWriter, r *http.Request) {
     if r.Method == http.MethodPost {
@@ -506,6 +569,7 @@ func createPost(w http.ResponseWriter, r *http.Request) {
         }
 
         postContent := r.FormValue("postCont")
+        categoryName := r.FormValue("catCont")
 
         // Create a new Post struct
         post := &forum.Post{
@@ -515,7 +579,18 @@ func createPost(w http.ResponseWriter, r *http.Request) {
         }
 
         // Insert the post into the database
-        err = insertPost(post)
+        lastInsertID, err := insertPost(post)
+        if err != nil {
+            http.Error(w, err.Error(), http.StatusInternalServerError)
+            return
+        }
+
+        // Insert the category for the post
+        category := &forum.Category{
+            CatName: categoryName,
+            PostID:  int(lastInsertID),
+        }
+        err = InsertCategory(category)
         if err != nil {
             http.Error(w, err.Error(), http.StatusInternalServerError)
             return
@@ -535,20 +610,27 @@ func createPost(w http.ResponseWriter, r *http.Request) {
     tmpl.Execute(w, nil)
 }
 
-func insertPost(post *forum.Post) error {
-	stmt, err := database.Prepare("INSERT INTO posts (user_id, post_content, post_created_at) VALUES (?, ?, ?)")
-	if err != nil {
-		return err
-	}
-	defer stmt.Close()
 
-	_, err = stmt.Exec(post.UserID, post.PostContent, post.CreatedAt)
-	if err != nil {
-		return err
-	}
+func insertPost(post *forum.Post) (int64, error) {
+    stmt, err := database.Prepare("INSERT INTO posts (user_id, post_content, post_created_at) VALUES (?, ?, ?)")
+    if err != nil {
+        return 0, err
+    }
+    defer stmt.Close()
 
-	return nil
+    result, err := stmt.Exec(post.UserID, post.PostContent, post.CreatedAt)
+    if err != nil {
+        return 0, err
+    }
+
+    lastInsertID, err := result.LastInsertId()
+    if err != nil {
+        return 0, err
+    }
+
+    return lastInsertID, nil
 }
+
 
 func insertComment(comment *forum.Comment) error {
 	stmt, err := database.Prepare("INSERT INTO comments (user_id, post_id, comment_content, comment_created_at) VALUES (?, ?, ?, ?)")
@@ -603,54 +685,64 @@ func createComment(w http.ResponseWriter, r *http.Request) {
 }
 
 func getPosts() ([]struct {
-	Post     forum.Post
-	User     forum.User
-	Comments []forum.Comment
+    Post       forum.Post
+    User       forum.User
+    Comments   []forum.Comment
+    Categories []forum.Category
 }, error) {
-	query := `
+    query := `
         SELECT p.post_id, p.user_id, p.post_content, p.post_created_at, u.username
         FROM posts p
         JOIN users u ON p.user_id = u.user_id
     `
 
-	rows, err := database.Query(query)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
+    rows, err := database.Query(query)
+    if err != nil {
+        return nil, err
+    }
+    defer rows.Close()
 
-	var postsWithUsers []struct {
-		Post     forum.Post
-		User     forum.User
-		Comments []forum.Comment
-	}
+    var postsWithUsers []struct {
+        Post       forum.Post
+        User       forum.User
+        Comments   []forum.Comment
+        Categories []forum.Category
+    }
 
-	for rows.Next() { //for loop until no more rows
-		var p forum.Post
-		var u forum.User
+    for rows.Next() {
+        var p forum.Post
+        var u forum.User
 
-		if err := rows.Scan(&p.PostID, &p.UserID, &p.PostContent, &p.CreatedAt, &u.Username); err != nil {
-			return nil, err
-		}
+        if err := rows.Scan(&p.PostID, &p.UserID, &p.PostContent, &p.CreatedAt, &u.Username); err != nil {
+            return nil, err
+        }
 
-		comments, err := getCommentsByPostID(p.PostID)
-		if err != nil {
-			return nil, err
-		}
+        comments, err := getCommentsByPostID(p.PostID)
+        if err != nil {
+            return nil, err
+        }
 
-		postsWithUsers = append(postsWithUsers, struct {
-			Post     forum.Post
-			User     forum.User
-			Comments []forum.Comment
-		}{p, u, comments})
-	}
+        categories, err := getCategoriesByPostID(p.PostID)
+        if err != nil {
+            return nil, err
+        }
 
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
+        postsWithUsers = append(postsWithUsers, struct {
+            Post       forum.Post
+            User       forum.User
+            Comments   []forum.Comment
+            Categories []forum.Category
+        }{p, u, comments, categories})
+    }
 
-	return postsWithUsers, nil
+    if err := rows.Err(); err != nil {
+        return nil, err
+    }
+
+    return postsWithUsers, nil
 }
+
+
 
 func getCommentsByPostID(postID int) ([]forum.Comment, error) {
 	query := `
@@ -683,4 +775,34 @@ func getCommentsByPostID(postID int) ([]forum.Comment, error) {
 	}
 
 	return comments, nil
+}
+
+func getCategoriesByPostID(postID int) ([]forum.Category, error) {
+    query := `
+        SELECT c.cat_id, c.cat_name
+        FROM categories c
+        JOIN post_categories pc ON c.cat_id = pc.category_id
+        WHERE pc.post_id = ?
+    `
+    rows, err := database.Query(query, postID)
+    if err != nil {
+        return nil, err
+    }
+    defer rows.Close()
+
+    var categories []forum.Category
+    for rows.Next() {
+        var c forum.Category
+        if err := rows.Scan(&c.CatID, &c.CatName); err != nil {
+            return nil, err
+        }
+        c.PostID = postID
+        categories = append(categories, c)
+    }
+
+    if err := rows.Err(); err != nil {
+        return nil, err
+    }
+
+    return categories, nil
 }
