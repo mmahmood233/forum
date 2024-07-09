@@ -18,14 +18,15 @@
           <tr><button><a href="doRegister">Register</a></button></tr>
           <tr><button><a href="doLogout">Logout</a></button></tr>
           <tr><button><a href="createP">Create Post</a></button></tr>
-          <form action="/" method="get">
-            <input type="text" name="catCont2" class="size" autocomplete="off" placeholder="Choose Category..." list="data2">
+          <form action="/" method="get" id="filterForm">
+            <input type="text" name="catCont2" id="categoryInput" class="size" autocomplete="off" placeholder="Choose Category..." list="data2">
             <datalist id="data2">
                 <option value="Sports">Sports</option>
                 <option value="News">News</option>
-                <option value="Others">Others(for now)</option>   
+                <option value="Others">Others(for now)</option>  
             </datalist>
             <button type="submit">Apply filters</button>
+            <button type="button" id="clearFilters">Clear Filters</button>
         </form>        
       </table>
 
@@ -197,6 +198,17 @@
         console.error('Error:', error);
       });
     }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      const clearFiltersBtn = document.getElementById('clearFilters');
+      const categoryInput = document.getElementById('categoryInput');
+      const filterForm = document.getElementById('filterForm');
+
+      clearFiltersBtn.addEventListener('click', function() {
+        categoryInput.value = ''; // Clear the input field
+        filterForm.submit(); // Submit the form to reload all posts
+      });
+    });
   </script>
 </body>
 </html>
