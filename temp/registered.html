@@ -69,80 +69,69 @@
             color: red;
         }
         .cont {
-                table-layout: left;
+            table-layout: left;
+        }
+        /* New styles for controlling visibility */
+        .logged-in-content,
+        .logged-out-content {
+            display: none;
+        }
+        body.is-logged-in .logged-in-content {
+            display: block;
+        }
+        body.is-logged-out .logged-out-content {
+            display: block;
         }
     </style>
 </head>
-<body>
+<body class="{{if .IsLoggedIn}}is-logged-in{{else}}is-logged-out{{end}}">
   <header>
       <h1>MAIN</h1>
-      {{if .IsLoggedIn}}
+  </header>
+
+  <div class="logged-in-content">
+    <br><br><br><br>
       <table id="cont">
           <tr><button><a href="doLogin">Login</a></button></tr>
           <tr><button><a href="doRegister">Register</a></button></tr>
           <tr><button><a href="doLogout">Logout</a></button></tr>
           <tr><button><a href="createP">Create Post</a></button></tr>
+          <form action="/" method="get">
+            <input type="text" name="catCont2" class="size" autocomplete="off" placeholder="Choose Category..." list="data2">
+            <datalist id="data2">
+                <option value="Sports">Sports</option>
+                <option value="News">News</option>
+                <option value="Others">Others(for now)</option>   
+            </datalist>
+            <button type="submit">Apply filters</button>
+        </form>        
       </table>
-      {{end}}
-  </header>
 
-  <div class="container">
-      <div class="post-container">
-          {{range .Posts}}
-          <div class="post">
-              <h3>{{.User.Username}}</h3>
-              <p>{{.Post.PostContent}}</p>
-              {{range .Categories}}
-              <p>Category: {{.CatName}}</p>
-              {{end}}
-              <small>Posted on: {{.Post.CreatedAt}}</small>
-              <script src="https://use.fontawesome.com/fe459689b4.js"></script>
-              <br>
-              <button class="btn" id="green" data-count="0"><i class="fa fa-thumbs-up fa-lg" aria-hidden="true"></i> <span class="count">0</span></button>
-              <button class="btn" id="red" data-count="0"><i class="fa fa-thumbs-down fa-lg" aria-hidden="true"></i> <span class="count">0</span></button>
-              {{if $.IsLoggedIn}}
-              <form action="/createC?postID={{.Post.PostID}}" method="post">
-                  <textarea name="commentCont" placeholder="Comment Content" required></textarea>
-                  <button type="submit">Add Comment</button>
-              </form>
-              {{end}}
-              <div class="comments">
-                  {{range .Comments}}
-                  <div class="comment">
-                      <p>{{.CommentContent}}</p>
-                      <small>Commented by: {{.Username}} </small><br>
-                      <small>on {{.CreatedAt}}</small>
-                      <script src="https://use.fontawesome.com/fe459689b4.js"></script>
-                      <br>
-                      <button class="btn" id="green" data-count="0"><i class="fa fa-thumbs-up fa-lg" aria-hidden="true"></i> <span class="count">0</span></button>
-                      <button class="btn" id="red" data-count="0"><i class="fa fa-thumbs-down fa-lg" aria-hidden="true"></i> <span class="count">0</span></button>
-                  </div>
+      <div class="container">
+          <div class="post-container">
+              {{range .Posts}}
+              <div class="post">
+                  <h3>{{.User.Username}}</h3>
+                  <p>{{.Post.PostContent}}</p>
+                  {{range .Categories}}
+                  <p>Category: {{.CatName}}</p>
                   {{end}}
-              </div>
-          </div>
-          {{else}}
-          <p>No posts yet.</p>
-          {{end}}
-      </div>
-  </div>
-  {{if not .IsLoggedIn}}
-  <div class="container">
-      <div class="post-container">
-          <table>
-              <tr><button><a href="doLogin">Login</a></button></tr>
-              <tr><button><a href="doRegister">Register</a></button></tr>
-          </table>
-          {{range .Posts}}
-          <div class="post">
-              <h3>{{.User.Username}}</h3>
-              <p>{{.Post.PostContent}}</p>
-              <small>Posted on: {{.Post.CreatedAt}}</small>
-              <form action="/createC?postID={{.Post.PostID}}" method="post">
+                  <small>Posted on: {{.Post.CreatedAt}}</small>
+                  <script src="https://use.fontawesome.com/fe459689b4.js"></script>
+                  <br>
+                  <button class="btn" id="green" data-count="0"><i class="fa fa-thumbs-up fa-lg" aria-hidden="true"></i> <span class="count">0</span></button>
+                  <button class="btn" id="red" data-count="0"><i class="fa fa-thumbs-down fa-lg" aria-hidden="true"></i> <span class="count">0</span></button>
+                  {{if $.IsLoggedIn}}
+                  <form action="/createC?postID={{.Post.PostID}}" method="post">
+                      <textarea name="commentCont" placeholder="Comment Content" required></textarea>
+                      <button type="submit">Add Comment</button>
+                  </form>
+                  {{end}}
                   <div class="comments">
                       {{range .Comments}}
                       <div class="comment">
                           <p>{{.CommentContent}}</p>
-                          <small>Commented by: {{.Username}} on {{.CreatedAt}}</small>
+                          <small>Commented by: {{.Username}} </small><br>
                           <small>on {{.CreatedAt}}</small>
                           <script src="https://use.fontawesome.com/fe459689b4.js"></script>
                           <br>
@@ -151,20 +140,61 @@
                       </div>
                       {{end}}
                   </div>
-              </form>
-          </div>
-          {{else}}
-          <p>No posts yet.</p>
+              </div>
+                {{else}}
+          <p>No posts found yet.</p>
           {{end}}
+          </div>
       </div>
   </div>
-  {{end}}
+
+  <div class="logged-out-content">
+      <div class="container">
+          <div class="post-container">
+              <table>
+                  <tr><button><a href="doLogin">Login</a></button></tr>
+                  <tr><button><a href="doRegister">Register</a></button></tr>
+              </table>
+              {{range .Posts}}
+              <div class="post">
+                  <h3>{{.User.Username}}</h3>
+                  <p>{{.Post.PostContent}}</p>
+                  {{range .Categories}}
+                  <p>Category: {{.CatName}}</p>
+                  {{end}}
+                  <small>Posted on: {{.Post.CreatedAt}}</small>
+                  <script src="https://use.fontawesome.com/fe459689b4.js"></script>
+                              <br>
+                              <button class="btn" id="green" data-count="0"><i class="fa fa-thumbs-up fa-lg" aria-hidden="true"></i> <span class="count">0</span></button>
+                              <button class="btn" id="red" data-count="0"><i class="fa fa-thumbs-down fa-lg" aria-hidden="true"></i> <span class="count">0</span></button>
+                  <form action="/createC?postID={{.Post.PostID}}" method="post">
+                      <div class="comments">
+                          {{range .Comments}}
+                          <div class="comment">
+                              <p>{{.CommentContent}}</p>
+                              <small>Commented by: {{.Username}} on {{.CreatedAt}}</small>
+                              <small>on {{.CreatedAt}}</small>
+                              <script src="https://use.fontawesome.com/fe459689b4.js"></script>
+                              <br>
+                              <button class="btn" id="green" data-count="0"><i class="fa fa-thumbs-up fa-lg" aria-hidden="true"></i> <span class="count">0</span></button>
+                              <button class="btn" id="red" data-count="0"><i class="fa fa-thumbs-down fa-lg" aria-hidden="true"></i> <span class="count">0</span></button>
+                          </div>
+                          {{end}}
+                      </div>
+                  </form>
+              </div>
+              {{else}}
+              <p>No posts found yet.</p>
+              {{end}}
+          </div>
+      </div>
+  </div>
 
   <footer>
       <p>Web Forum &copy; 2024</p>
   </footer>
-</body>
-<script>
+
+  <script>
     var btns = document.querySelectorAll('.btn');
    
     btns.forEach(function(btn) {
@@ -179,48 +209,40 @@
    
         if (this.id === 'green') {
           if (greenBtn.classList.contains('clicked')) {
-            // Green button has already been clicked
             greenBtn.classList.remove('clicked');
             greenBtn.classList.remove('green');
             count = 0;
           } else {
-            // Remove the clicked class from the red button
             redBtn.classList.remove('clicked');
             redBtn.classList.remove('red');
             redBtn.querySelector('.count').textContent = '0';
             redBtn.setAttribute('data-count', '0');
    
-            // Toggle the green button and update the count
             greenBtn.classList.toggle('green');
             count = (count === 0)? 1 : 0;
             greenBtn.setAttribute('data-count', count);
             greenBtn.querySelector('.count').textContent = count;
             greenBtn.classList.add('clicked');
    
-            // Send feedback
             sendFeedback('like', this.parentNode.dataset.id, isPost);
           }
         } else {
           if (redBtn.classList.contains('clicked')) {
-            // Red button has already been clicked
             redBtn.classList.remove('clicked');
             redBtn.classList.remove('red');
             count = 0;
           } else {
-            // Remove the clicked class from the green button
             greenBtn.classList.remove('clicked');
             greenBtn.classList.remove('green');
             greenBtn.querySelector('.count').textContent = '0';
             greenBtn.setAttribute('data-count', '0');
    
-            // Toggle the red button and update the count
             redBtn.classList.toggle('red');
             count = (count === 0)? 1 : 0;
             redBtn.setAttribute('data-count', count);
             redBtn.querySelector('.count').textContent = count;
             redBtn.classList.add('clicked');
    
-            // Send feedback
             sendFeedback('dislike', this.parentNode.dataset.id, isPost);
           }
         }
@@ -253,5 +275,6 @@
         console.error('Error:', error);
       });
     }
-    </script>
+  </script>
+</body>
 </html>

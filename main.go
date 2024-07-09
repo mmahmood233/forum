@@ -355,9 +355,10 @@ func isLoggedIn(r *http.Request) bool {
 	
 }
 
-
-
 func parseMain(w http.ResponseWriter, r *http.Request) {
+    // Get the selected category from the form value
+    selectedCategory := r.FormValue("catCont2")
+
     // Retrieve posts from the database
     postsWithUsers, err := getPosts()
     if err != nil {
@@ -368,25 +369,17 @@ func parseMain(w http.ResponseWriter, r *http.Request) {
     // Check if the user is logged in
     isLoggedIn := isLoggedIn(r)
 
-    // Create a new slice with the expected structure
-    data := make([]struct {
+    // Filter posts based on the selected category
+    var filteredPosts []struct {
         Post       forum.Post
         User       forum.User
         Comments   []forum.Comment
         Categories []forum.Category
-    }, len(postsWithUsers))
+    }
 
-    for i, postWithUser := range postsWithUsers {
-        data[i] = struct {
-            Post       forum.Post
-            User       forum.User
-            Comments   []forum.Comment
-            Categories []forum.Category
-        }{
-            Post:       postWithUser.Post,
-            User:       postWithUser.User,
-            Comments:   postWithUser.Comments,
-            Categories: postWithUser.Categories,
+    for _, postWithUser := range postsWithUsers {
+        if selectedCategory == "" || categoryMatches(postWithUser.Categories, selectedCategory) {
+            filteredPosts = append(filteredPosts, postWithUser)
         }
     }
 
@@ -399,22 +392,36 @@ func parseMain(w http.ResponseWriter, r *http.Request) {
 
     // Define and initialize the anonymous struct
     templateData := struct {
-        Posts      []struct {
+        Posts            []struct {
             Post       forum.Post
             User       forum.User
             Comments   []forum.Comment
             Categories []forum.Category
         }
-        IsLoggedIn bool
+        IsLoggedIn       bool
+        SelectedCategory string
     }{
-        Posts:      data,
-        IsLoggedIn: isLoggedIn,
+        Posts:            filteredPosts,
+        IsLoggedIn:       isLoggedIn,
+        SelectedCategory: selectedCategory,
     }
 
     // Render the template with the data
     tmpl.Execute(w, templateData)
 }
 
+
+func categoryMatches(categories []forum.Category, selectedCategory string) bool {
+    if selectedCategory == "" {
+        return true
+    }
+    for _, category := range categories {
+        if category.CatName == selectedCategory {
+            return true
+        }
+    }
+    return false
+}
 
 
 // func parseReg(w http.ResponseWriter, r *http.Request) {
