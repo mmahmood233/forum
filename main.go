@@ -34,6 +34,9 @@ func main() {
 	http.Handle("/login.css", http.FileServer(http.Dir("temp")))
 	http.Handle("/com.css", http.FileServer(http.Dir("temp")))
     http.Handle("/reg.css", http.FileServer(http.Dir("temp")))
+	http.Handle("/main.css", http.FileServer(http.Dir("temp")))
+    http.Handle("/error.css", http.FileServer(http.Dir("temp")))
+
 
 	// Handle dynamic requests
 	http.HandleFunc("/WebServer", forum.WebServer)
@@ -50,10 +53,10 @@ func main() {
 	http.HandleFunc("/createC", createComment)
 	http.HandleFunc("/feedback", feedbackHandler)
 
-	// http.HandleFunc("/like-post", handleLikePost)
-	// http.HandleFunc("/dislike-post", handleDislikePost)
-	// http.HandleFunc("/like-comment", handleLikeComment)
-	// http.HandleFunc("/dislike-comment", handleDislikeComment)
+	http.HandleFunc("/like-post", handleLikePost)
+	http.HandleFunc("/dislike-post", handleDislikePost)
+	http.HandleFunc("/like-comment", handleLikeComment)
+	http.HandleFunc("/dislike-comment", handleDislikeComment)
 
 	// http.HandleFunc("/createP", createPost)
 
@@ -126,15 +129,51 @@ func feedbackHandler(w http.ResponseWriter, r *http.Request) {
 		switch feedback.Type {
 		case "like":
 			if feedback.IsPost {
-				InsertPostLike(feedback.UserID, feedback.ID)
+				postLike := &forum.PostLike{
+					UserID: feedback.UserID,
+					PostID: feedback.ID,
+					IsLike: true,
+				}
+				err = InsertPostLike(database, postLike)
+				if err != nil {
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return
+				}
 			} else {
-				InsertCommentLike(feedback.UserID, feedback.ID)
+				commentLike := &forum.CommentLike{
+					UserID: feedback.UserID,
+					CommentID: feedback.ID,
+					IsLike: true,
+				}
+				err = InsertCommentLike(database, commentLike)
+				if err != nil {
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return
+				}
 			}
 		case "dislike":
 			if feedback.IsPost {
-				InsertPostDislike(feedback.UserID, feedback.ID)
+				postdisLike := &forum.PostDislike{
+					UserID: feedback.UserID,
+					PostID: feedback.ID,
+					IsDislike: true,
+				}
+				err = InsertPostDislike(database, postdisLike)
+				if err != nil {
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return
+				}
 			} else {
-				InsertCommentDislike(feedback.UserID, feedback.ID)
+				commentDisLike := &forum.CommentDislike{
+					UserID: feedback.UserID,
+					CommentID: feedback.ID,
+					IsDislike: true,
+				}
+				err = InsertCommentDislike(database, commentDisLike)
+				if err != nil {
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return
+				}
 			}
 		}
 
@@ -145,32 +184,204 @@ func feedbackHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func InsertCommentLike(userID int, commentID int) {
-	_, err := database.Exec(`INSERT INTO comment_likes (user_id, comment_id, comment_is_like) VALUES (?, ?, ?)`, userID, commentID, true)
+func InsertCommentLike(db *sql.DB, commentLike *forum.CommentLike) error {
+	insertCommentLikeSQL := `INSERT INTO comment_likes(user_id, comment_id, comment_is_like) VALUES (?, ?, ?)`
+	statement, err := db.Prepare(insertCommentLikeSQL)
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("Error preparing statement: %v", err)
+		return err
 	}
+	defer statement.Close()
+
+	_, err = statement.Exec(commentLike.UserID, commentLike.CommentID, commentLike.IsLike)
+	if err != nil {
+		log.Printf("Error executing statement: %v", err)
+		return err
+	}
+	// Check if the user has already liked the comment
+	var existingLike bool
+	wewe := db.QueryRow("SELECT EXISTS(SELECT 1 FROM comment_likes WHERE user_id = ? AND comment_id = ?)", commentLike.UserID, commentLike.CommentID).Scan(&existingLike)
+	if wewe != nil {
+		return err
+	}
+
+	if existingLike {
+		// Delete the existing like
+		_, wewe = db.Exec("DELETE FROM comment_likes WHERE user_id = ? AND comment_id = ?", commentLike.UserID, commentLike.CommentID)
+		if wewe != nil {
+			return err
+		}
+	}
+
+	// Check if the user has already disliked the comment
+	var existingDislike bool
+	err = db.QueryRow("SELECT EXISTS(SELECT 1 FROM comment_dislikes WHERE user_id = ? AND comment_id = ?)", commentLike.UserID, commentLike.CommentID).Scan(&existingDislike)
+	if err != nil {
+		return err
+	}
+
+	if existingDislike {
+		// Delete the existing dislike
+		_, err = db.Exec("DELETE FROM comment_dislikes WHERE user_id = ? AND comment_id = ?", commentLike.UserID, commentLike.CommentID)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Insert the new like
+	SQL := `INSERT INTO comment_likes(user_id, comment_id, comment_is_like) VALUES (?, ?, ?)`
+	_, err = db.Exec(SQL, commentLike.UserID, commentLike.CommentID, commentLike.IsLike)
+	return err
 }
 
-func InsertCommentDislike(userID int, commentID int) {
-	_, err := database.Exec(`INSERT INTO comment_dislikes (user_id, comment_id, comment_is_dislike) VALUES (?, ?, ?)`, userID, commentID, true)
+func InsertCommentDislike(db *sql.DB, commentDislike *forum.CommentDislike) error {
+	insertCommentDislikeSQL := `INSERT INTO comment_dislikes(user_id, comment_id, comment_is_dislike) VALUES (?, ?, ?)`
+	statement, err := db.Prepare(insertCommentDislikeSQL)
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("Error preparing statement: %v", err)
+		return err
 	}
+	defer statement.Close()
+
+	_, err = statement.Exec(commentDislike.UserID, commentDislike.CommentID, commentDislike.IsDislike)
+	if err != nil {
+		log.Printf("Error executing statement: %v", err)
+		return err
+	}
+	// Check if the user has already disliked the comment
+	var existingDislike bool
+	wewe := db.QueryRow("SELECT EXISTS(SELECT 1 FROM comment_dislikes WHERE user_id = ? AND comment_id = ?)", commentDislike.UserID, commentDislike.CommentID).Scan(&existingDislike)
+	if wewe != nil {
+		return err
+	}
+
+	if existingDislike {
+		// Delete the existing dislike
+		_, err = db.Exec("DELETE FROM comment_dislikes WHERE user_id = ? AND comment_id = ?", commentDislike.UserID, commentDislike.CommentID)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Check if the user has already liked the comment
+	var existingLike bool
+	err = db.QueryRow("SELECT EXISTS(SELECT 1 FROM comment_likes WHERE user_id = ? AND comment_id = ?)", commentDislike.UserID, commentDislike.CommentID).Scan(&existingLike)
+	if err != nil {
+		return err
+	}
+
+	if existingLike {
+		// Delete the existing like
+		_, err = db.Exec("DELETE FROM comment_likes WHERE user_id = ? AND comment_id = ?", commentDislike.UserID, commentDislike.CommentID)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Insert the new dislike
+	SQL := `INSERT INTO comment_dislikes(user_id, comment_id, comment_is_dislike) VALUES (?, ?, ?)`
+	_, err = db.Exec(SQL, commentDislike.UserID, commentDislike.CommentID, commentDislike.IsDislike)
+	return err
 }
 
-func InsertPostLike(userID int, postID int) {
-	_, err := database.Exec(`INSERT INTO post_likes (user_id, post_id, post_is_like) VALUES (?, ?, ?)`, userID, postID, true)
+func InsertPostDislike(db *sql.DB, postDislike *forum.PostDislike) error {
+	insertPostDislikeSQL := `INSERT INTO post_dislikes(user_id, post_id, post_is_dislike) VALUES (?, ?, ?)`
+	statement, err := db.Prepare(insertPostDislikeSQL)
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("Error preparing statement: %v", err)
+		return err
 	}
+	defer statement.Close()
+
+	_, err = statement.Exec(postDislike.UserID, postDislike.PostID, postDislike.IsDislike)
+	if err != nil {
+		log.Printf("Error executing statement: %v", err)
+		return err
+	}
+	// Check if the user has already disliked the post
+	var existingDislike bool
+	wewe := db.QueryRow("SELECT EXISTS(SELECT 1 FROM post_dislikes WHERE user_id = ? AND post_id = ?)", postDislike.UserID, postDislike.PostID).Scan(&existingDislike)
+	if wewe != nil {
+		return err
+	}
+
+	if existingDislike {
+		// Delete the existing dislike
+		_, err = db.Exec("DELETE FROM post_dislikes WHERE user_id = ? AND post_id = ?", postDislike.UserID, postDislike.PostID)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Check if the user has already liked the post
+	var existingLike bool
+	err = db.QueryRow("SELECT EXISTS(SELECT 1 FROM post_likes WHERE user_id = ? AND post_id = ?)", postDislike.UserID, postDislike.PostID).Scan(&existingLike)
+	if err != nil {
+		return err
+	}
+
+	if existingLike {
+		// Delete the existing like
+		_, err = db.Exec("DELETE FROM post_likes WHERE user_id = ? AND post_id = ?", postDislike.UserID, postDislike.PostID)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Insert the new dislike
+	SQL := `INSERT INTO post_dislikes(user_id, post_id, post_is_dislike) VALUES (?, ?, ?)`
+	_, err = db.Exec(SQL, postDislike.UserID, postDislike.PostID, postDislike.IsDislike)
+	return err
 }
 
-func InsertPostDislike(userID int, postID int) {
-	_, err := database.Exec(`INSERT INTO post_dislikes (user_id, post_id, post_is_dislike) VALUES (?, ?, ?)`, userID, postID, true)
+func InsertPostLike(db *sql.DB, postLike *forum.PostLike) error {
+	insertPostLikeSQL := `INSERT INTO post_likes(user_id, post_id, post_is_like) VALUES (?, ?, ?)`
+	statement, err := db.Prepare(insertPostLikeSQL)
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("Error preparing statement: %v", err)
+		return err
 	}
+	defer statement.Close()
+
+	_, err = statement.Exec(postLike.UserID, postLike.PostID, postLike.IsLike)
+	if err != nil {
+		log.Printf("Error executing statement: %v", err)
+		return err
+	}
+	// Check if the user has already liked the post
+	var existingLike bool
+	wewe := db.QueryRow("SELECT EXISTS(SELECT 1 FROM post_likes WHERE user_id = ? AND post_id = ?)", postLike.UserID, postLike.PostID).Scan(&existingLike)
+	if wewe != nil {
+		return err
+	}
+
+	if existingLike {
+		// Delete the existing like
+		_, err = db.Exec("DELETE FROM post_likes WHERE user_id = ? AND post_id = ?", postLike.UserID, postLike.PostID)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Check if the user has already disliked the post
+	var existingDislike bool
+	err = db.QueryRow("SELECT EXISTS(SELECT 1 FROM post_dislikes WHERE user_id = ? AND post_id = ?)", postLike.UserID, postLike.PostID).Scan(&existingDislike)
+	if err != nil {
+		return err
+	}
+
+	if existingDislike {
+		// Delete the existing dislike
+		_, err = db.Exec("DELETE FROM post_dislikes WHERE user_id = ? AND post_id = ?", postLike.UserID, postLike.PostID)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Insert the new like
+	SQL := `INSERT INTO post_likes(user_id, post_id, post_is_like) VALUES (?, ?, ?)`
+	_, err = db.Exec(SQL, postLike.UserID, postLike.PostID, postLike.IsLike)
+	return err
 }
 
 //---
@@ -796,4 +1007,252 @@ func getCategoriesByPostID(postID int) ([]forum.Category, error) {
 	}
 
 	return categories, nil
+}
+
+func handleLikePost(w http.ResponseWriter, r *http.Request) {
+	// Get the session and post ID
+	session, err := getSession(r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	postID, err := strconv.Atoi(r.FormValue("postID"))
+	if err != nil {
+		http.Error(w, "Invalid post ID", http.StatusBadRequest)
+		return
+	}
+
+	// Check if the user has already liked the post
+	var existingLike bool
+	err = database.QueryRow("SELECT EXISTS(SELECT 1 FROM post_likes WHERE user_id = ? AND post_id = ?)", session.UserID, postID).Scan(&existingLike)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if existingLike {
+		// Delete the existing like
+		_, err = database.Exec("DELETE FROM post_likes WHERE user_id = ? AND post_id = ?", session.UserID, postID)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		// Redirect or return a response
+		http.Redirect(w, r, "/registered", http.StatusSeeOther)
+		return
+	} else {
+		// Delete any existing dislike for the post
+		err = DeletePostDislike(database, session.UserID, postID)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		// Insert the like
+		postLike := &forum.PostLike{
+			UserID: session.UserID,
+			PostID: postID,
+			IsLike: true,
+		}
+		err = InsertPostLike(database, postLike)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+
+	// Redirect or return a response
+	http.Redirect(w, r, "/registered", http.StatusSeeOther)
+}
+
+func handleDislikePost(w http.ResponseWriter, r *http.Request) {
+	// Get the session and post ID
+	session, err := getSession(r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	postID, err := strconv.Atoi(r.FormValue("postID"))
+	if err != nil {
+		http.Error(w, "Invalid post ID", http.StatusBadRequest)
+		return
+	}
+
+	// Check if the user has already disliked the post
+	var existingDislike bool
+	err = database.QueryRow("SELECT EXISTS(SELECT 1 FROM post_dislikes WHERE user_id = ? AND post_id = ?)", session.UserID, postID).Scan(&existingDislike)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if existingDislike {
+		// Delete the existing dislike
+		_, err = database.Exec("DELETE FROM post_dislikes WHERE user_id = ? AND post_id = ?", session.UserID, postID)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		// Redirect or return a response
+		http.Redirect(w, r, "/registered", http.StatusSeeOther)
+		return
+	} else {
+		// Delete any existing like for the post
+		err = DeletePostLike(database, session.UserID, postID)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		// Insert the dislike
+		postDislike := &forum.PostDislike{
+			UserID:    session.UserID,
+			PostID:    postID,
+			IsDislike: true,
+		}
+		err = InsertPostDislike(database, postDislike)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+
+	// Redirect or return a response
+	http.Redirect(w, r, "/registered", http.StatusSeeOther)
+}
+
+func handleLikeComment(w http.ResponseWriter, r *http.Request) {
+	// Get the session and comment ID
+	session, err := getSession(r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	commentID, err := strconv.Atoi(r.FormValue("commentID"))
+	if err != nil {
+		http.Error(w, "Invalid comment ID", http.StatusBadRequest)
+		return
+	}
+
+	// Check if the user has already liked the comment
+	var existingLike bool
+	err = database.QueryRow("SELECT EXISTS(SELECT 1 FROM comment_likes WHERE user_id = ? AND comment_id = ?)", session.UserID, commentID).Scan(&existingLike)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if existingLike {
+		// Delete the existing like
+		_, err = database.Exec("DELETE FROM comment_likes WHERE user_id = ? AND comment_id = ?", session.UserID, commentID)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		// Redirect or return a response
+		http.Redirect(w, r, "/registered", http.StatusSeeOther)
+		return
+	} else {
+		// Delete any existing dislike for the comment
+		err = DeleteCommentDislike(database, session.UserID, commentID)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		// Insert the like
+		commentLike := &forum.CommentLike{
+			UserID:    session.UserID,
+			CommentID: commentID,
+			IsLike:    true,
+		}
+		err = InsertCommentLike(database, commentLike)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+
+	// Redirect or return a response
+	http.Redirect(w, r, "/registered", http.StatusSeeOther)
+}
+
+func handleDislikeComment(w http.ResponseWriter, r *http.Request) {
+	// Get the session and comment ID
+	session, err := getSession(r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	commentID, err := strconv.Atoi(r.FormValue("commentID"))
+	if err != nil {
+		http.Error(w, "Invalid comment ID", http.StatusBadRequest)
+		return
+	}
+
+	// Check if the user has already disliked the comment
+	var existingDislike bool
+	err = database.QueryRow("SELECT EXISTS(SELECT 1 FROM comment_dislikes WHERE user_id = ? AND comment_id = ?)", session.UserID, commentID).Scan(&existingDislike)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if existingDislike {
+		// Delete the existing dislike
+		_, err = database.Exec("DELETE FROM comment_dislikes WHERE user_id = ? AND comment_id = ?", session.UserID, commentID)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		// Redirect or return a response
+		http.Redirect(w, r, "/registered", http.StatusSeeOther)
+		return
+	} else {
+		// Delete any existing like for the comment
+		err = DeleteCommentLike(database, session.UserID, commentID)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		// Insert the dislike
+		commentDislike := &forum.CommentDislike{
+			UserID:    session.UserID,
+			CommentID: commentID,
+			IsDislike: true,
+		}
+		err = InsertCommentDislike(database, commentDislike)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+
+	// Redirect or return a response
+	http.Redirect(w, r, "/registered", http.StatusSeeOther)
+}
+
+func DeletePostLike(db *sql.DB, userID, postID int) error {
+	_, err := db.Exec("DELETE FROM post_likes WHERE user_id = ? AND post_id = ?", userID, postID)
+	return err
+}
+
+func DeletePostDislike(db *sql.DB, userID, postID int) error {
+	_, err := db.Exec("DELETE FROM post_dislikes WHERE user_id = ? AND post_id = ?", userID, postID)
+	return err
+}
+
+func DeleteCommentLike(db *sql.DB, userID, commentID int) error {
+	_, err := db.Exec("DELETE FROM comment_likes WHERE user_id = ? AND comment_id = ?", userID, commentID)
+	return err
+}
+
+func DeleteCommentDislike(db *sql.DB, userID, commentID int) error {
+	_, err := db.Exec("DELETE FROM comment_dislikes WHERE user_id = ? AND comment_id = ?", userID, commentID)
+	return err
 }

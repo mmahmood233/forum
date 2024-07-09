@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Main Page</title>
     <link rel="stylesheet" href="registered.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
 </head>
 <body class="{{if .IsLoggedIn}}is-logged-in{{else}}is-logged-out{{end}}">
   <header>
@@ -12,63 +13,71 @@
   </header>
 
   <div class="logged-in-content">
-    <br><br><br><br>
+    <div class="nav-bar">
       <table id="cont">
-          <tr><button><a href="doLogin">Login</a></button></tr>
-          <tr><button><a href="doRegister">Register</a></button></tr>
+        <br><br>
+        <br><br>
           <tr><button><a href="doLogout">Logout</a></button></tr>
+          <br><br>
           <tr><button><a href="createP">Create Post</a></button></tr>
-          <form action="/" method="get" id="filterForm">
-            <input type="text" name="catCont2" id="categoryInput" class="size" autocomplete="off" placeholder="Choose Category..." list="data2">
+          <br><br>
+          <form action="/" method="get">
+            <input type="text" name="catCont2" class="size" autocomplete="off" placeholder="Choose Category..." list="data2">
+            <!-- <br><br> -->
             <datalist id="data2">
                 <option value="Sports">Sports</option>
                 <option value="News">News</option>
-                <option value="Others">Others(for now)</option>  
+                <option value="Others">Others(for now)</option>   
             </datalist>
+            <br><br>
             <button type="submit">Apply filters</button>
+            <br><br>
             <button type="button" id="clearFilters">Clear Filters</button>
+            <br><br>
         </form>        
       </table>
-
-      <div class="container">
-          <div class="post-container">
-              {{range .Posts}}
-              <div class="post">
-                  <h3>{{.User.Username}}</h3>
-                  <p>{{.Post.PostContent}}</p>
-                  {{range .Categories}}
-                  <p>Category: {{.CatName}}</p>
-                  {{end}}
-                  <small>Posted on: {{.Post.CreatedAt}}</small>
-                  <script src="https://use.fontawesome.com/fe459689b4.js"></script>
-                  <br>
-                  <button class="btn" id="green" data-count="0"><i class="fa fa-thumbs-up fa-lg" aria-hidden="true"></i> <span class="count">0</span></button>
-                  <button class="btn" id="red" data-count="0"><i class="fa fa-thumbs-down fa-lg" aria-hidden="true"></i> <span class="count">0</span></button>
-                  {{if $.IsLoggedIn}}
-                  <form action="/createC?postID={{.Post.PostID}}" method="post">
-                      <textarea name="commentCont" placeholder="Comment Content" required></textarea>
-                      <button type="submit">Add Comment</button>
-                  </form>
-                  {{end}}
-                  <div class="comments">
-                      {{range .Comments}}
-                      <div class="comment">
-                          <p>{{.CommentContent}}</p>
-                          <small>Commented by: {{.Username}} </small><br>
-                          <small>on {{.CreatedAt}}</small>
-                          <script src="https://use.fontawesome.com/fe459689b4.js"></script>
-                          <br>
-                          <button class="btn" id="green" data-count="0"><i class="fa fa-thumbs-up fa-lg" aria-hidden="true"></i> <span class="count">0</span></button>
-                          <button class="btn" id="red" data-count="0"><i class="fa fa-thumbs-down fa-lg" aria-hidden="true"></i> <span class="count">0</span></button>
-                      </div>
-                      {{end}}
-                  </div>
-              </div>
-                {{else}}
-          <p>No posts found yet.</p>
-          {{end}}
-          </div>
-      </div>
+    </div>
+    <div class="container">
+        <div class="post-container">
+            {{range .Posts}}
+            <div class="post">
+              <h4>Post Content:</h4>
+                <h3>User: {{.User.Username}}</h3>
+                <p>{{.Post.PostContent}}</p>
+                {{range .Categories}}
+                <p>Category: {{.CatName}}</p>
+                {{end}}
+                <small>Posted on: {{.Post.CreatedAt}}</small>
+                <script src="https://use.fontawesome.com/fe459689b4.js"></script>
+                <br>
+                <button class="btn" id="green" data-count="0"><i class="fa fa-thumbs-up fa-lg" aria-hidden="true"></i> <span class="count">0</span></button>
+                <button class="btn" id="red" data-count="0"><i class="fa fa-thumbs-down fa-lg" aria-hidden="true"></i> <span class="count">0</span></button>
+                {{if $.IsLoggedIn}}
+                <form action="/createC?postID={{.Post.PostID}}" method="post">
+                    <textarea name="commentCont" placeholder="Comment Content" required></textarea>
+                    <button type="submit">Add Comment</button>
+                </form>
+                {{end}}
+                <div class="comments">
+                    {{range .Comments}}
+                    <div class="comment">
+                      <h4>Comment Content:</h4>
+                        <p>Comment: {{.CommentContent}}</p>
+                        <small>Commented by: {{.Username}} </small><br>
+                        <small>on {{.CreatedAt}}</small>
+                        <script src="https://use.fontawesome.com/fe459689b4.js"></script>
+                        <br>
+                        <button class="btn" id="green" data-count="0"><i class="fa fa-thumbs-up fa-lg" aria-hidden="true"></i> <span class="count">0</span></button>
+                        <button class="btn" id="red" data-count="0"><i class="fa fa-thumbs-down fa-lg" aria-hidden="true"></i> <span class="count">0</span></button>
+                    </div>
+                    {{end}}
+                </div>
+            </div>
+            {{else}}
+            <p>No posts found yet.</p>
+            {{end}}
+        </div>
+    </div>
   </div>
 
   <div class="logged-out-content">
@@ -80,21 +89,23 @@
               </table>
               {{range .Posts}}
               <div class="post">
-                  <h3>{{.User.Username}}</h3>
-                  <p>{{.Post.PostContent}}</p>
+                <h4>Post Content:</h4>
+                  <h3>User: {{.User.Username}}</h3>
+                  <p>Content: {{.Post.PostContent}}</p>
                   {{range .Categories}}
                   <p>Category: {{.CatName}}</p>
                   {{end}}
                   <small>Posted on: {{.Post.CreatedAt}}</small>
                   <script src="https://use.fontawesome.com/fe459689b4.js"></script>
-                              <br>
-                              <button class="btn" id="green" data-count="0"><i class="fa fa-thumbs-up fa-lg" aria-hidden="true"></i> <span class="count">0</span></button>
-                              <button class="btn" id="red" data-count="0"><i class="fa fa-thumbs-down fa-lg" aria-hidden="true"></i> <span class="count">0</span></button>
+                  <br>
+                  <button class="btn" id="green" data-count="0"><i class="fa fa-thumbs-up fa-lg" aria-hidden="true"></i> <span class="count">0</span></button>
+                  <button class="btn" id="red" data-count="0"><i class="fa fa-thumbs-down fa-lg" aria-hidden="true"></i> <span class="count">0</span></button>
                   <form action="/createC?postID={{.Post.PostID}}" method="post">
                       <div class="comments">
                           {{range .Comments}}
                           <div class="comment">
-                              <p>{{.CommentContent}}</p>
+                            <h4>Comment Content</h4>
+                              <p>Comment: {{.CommentContent}}</p>
                               <small>Commented by: {{.Username}} on {{.CreatedAt}}</small>
                               <small>on {{.CreatedAt}}</small>
                               <script src="https://use.fontawesome.com/fe459689b4.js"></script>
@@ -116,7 +127,6 @@
   <footer>
       <p>Web Forum &copy; 2024</p>
   </footer>
-
   <script>
     var btns = document.querySelectorAll('.btn');
    
@@ -198,17 +208,17 @@
         console.error('Error:', error);
       });
     }
+    document.getElementById('clearFilters').addEventListener('click', function() {
+  // Get the current URL
+  var currentUrl = window.location.href;
 
-    document.addEventListener('DOMContentLoaded', function() {
-      const clearFiltersBtn = document.getElementById('clearFilters');
-      const categoryInput = document.getElementById('categoryInput');
-      const filterForm = document.getElementById('filterForm');
+  // Remove the catCont2 query parameter from the URL
+  var newUrl = currentUrl.split('?')[0];
 
-      clearFiltersBtn.addEventListener('click', function() {
-        categoryInput.value = ''; // Clear the input field
-        filterForm.submit(); // Submit the form to reload all posts
-      });
-    });
+  // Redirect to the new URL
+  window.location.href = newUrl;
+});
+
   </script>
 </body>
 </html>
