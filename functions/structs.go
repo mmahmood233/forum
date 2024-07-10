@@ -77,3 +77,9 @@ type Session struct {
 	UserID    int
 	ExpiresAt time.Time
 }
+
+type Error struct {
+	Err int
+	ErrStr string
+}
+

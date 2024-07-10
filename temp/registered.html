@@ -21,7 +21,7 @@
           <br><br>
           <tr><button><a href="createP">Create Post</a></button></tr>
           <br><br>
-          <form action="/" method="get">
+          <form action="/registered" method="get">
             <input type="text" name="catCont2" class="size" autocomplete="off" placeholder="Choose Category..." list="data2">
             <!-- <br><br> -->
             <datalist id="data2">
@@ -88,6 +88,7 @@
               <table>
                   <tr><button><a href="doLogin">Login</a></button></tr>
                   <tr><button><a href="doRegister">Register</a></button></tr>
+                  <tr><button><a href="/">Back to Main Page</a></button></tr>
               </table>
               {{range .Posts}}
               <div class="post">
@@ -213,7 +214,16 @@ function sendFeedback(type, id, isPost) {
     .catch(error => {
         console.error('Error:', error);
     });
-}
+    }
+    document.getElementById('clearFilters').addEventListener('click', function() {
+  // Get the current URL
+  var currentUrl = window.location.href;
+  // Remove the catCont2 query parameter from the URL
+  var newUrl = currentUrl.split('?')[0];
+
+  // Redirect to the new URL
+  window.location.href = newUrl;
+});
   </script>
 </body>
 </html>

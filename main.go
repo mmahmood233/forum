@@ -40,7 +40,8 @@ func main() {
 	// Handle dynamic requests
 	http.HandleFunc("/WebServer", forum.WebServer)
 
-	http.HandleFunc("/", parseMain)
+	http.HandleFunc("/", mainpage)
+	http.HandleFunc("/registered", parseMain)
 	// http.HandleFunc("/registered", parseReg)
 
 	http.HandleFunc("/doRegister", handleReg)
@@ -168,8 +169,6 @@ func feedbackHandler(w http.ResponseWriter, r *http.Request) {
 					IsDislike: true,
 				}
 			
-		
-				
 				err = InsertCommentDislike(database, commentDisLike)
 				if err != nil {
 					http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -710,7 +709,7 @@ func handleReg(w http.ResponseWriter, r *http.Request) {
 	// Parse the HTML template file
 	tmpl, err := template.ParseFiles("temp/regPage.html")
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		handleError(w, &forum.Error{Err: 500, ErrStr: "Error 500 found"})
 		return
 	}
 
@@ -761,7 +760,7 @@ func handleLog(w http.ResponseWriter, r *http.Request) {
 	// Parse the HTML template file
 	tmpl, err := template.ParseFiles("temp/loginPage.html")
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		handleError(w, &forum.Error{Err: 500, ErrStr: "Error 500 found"})
 		return
 	}
 
@@ -855,6 +854,36 @@ func isLoggedIn(r *http.Request) bool {
 
 }
 
+func handleError(w http.ResponseWriter, data *forum.Error) {
+	tmpl, err := template.ParseFiles("temp/error.html")
+	if err != nil {
+		// Render a generic error page if template parsing fails
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+	if data.Err == 400 {
+		w.WriteHeader(http.StatusBadRequest)
+	} else if data.Err == 404 {
+		w.WriteHeader(http.StatusNotFound)
+	} else if data.Err == 500 {
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+	err = tmpl.Execute(w, data)
+}
+
+func mainpage(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path!= "/" {
+		handleError(w, &forum.Error{Err: 404, ErrStr: "Error 404 found"})
+		return
+	}
+	tmp1, err := template.ParseFiles("temp/main.html")
+	if err != nil {
+		handleError(w, &forum.Error{Err: 500, ErrStr: "Error 500 found"})
+		return
+	}
+	tmp1.Execute(w, nil)
+}
+
 func parseMain(w http.ResponseWriter, r *http.Request) {
 	// Get the selected category from the form value
 	selectedCategory := r.FormValue("catCont2")
@@ -886,7 +915,7 @@ func parseMain(w http.ResponseWriter, r *http.Request) {
 	// Parse the HTML template file
 	tmpl, err := template.ParseFiles("temp/registered.html")
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		handleError(w, &forum.Error{Err: 500, ErrStr: "Error 500 found"})
 		return
 	}
 
@@ -921,25 +950,6 @@ func categoryMatches(categories []forum.Category, selectedCategory string) bool 
 	}
 	return false
 }
-
-// func parseReg(w http.ResponseWriter, r *http.Request) {
-// 	// Retrieve posts from the database
-// 	posts, err := getPosts()
-// 	if err != nil {
-// 		http.Error(w, err.Error(), http.StatusInternalServerError)
-// 		return
-// 	}
-
-// 	// Parse the HTML template file
-// 	tmpl, err := template.ParseFiles("temp/registered.html")
-// 	if err != nil {
-// 		http.Error(w, err.Error(), http.StatusInternalServerError)
-// 		return
-// 	}
-
-// 	// Render the template with posts data
-// 	tmpl.Execute(w, posts)
-// }
 
 func getSessionID() string {
 	key := make([]byte, 32)
@@ -1104,7 +1114,7 @@ func createPost(w http.ResponseWriter, r *http.Request) {
 
 	tmpl, err := template.ParseFiles("temp/comPage.html")
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		handleError(w, &forum.Error{Err: 500, ErrStr: "Error 500 found"})
 		return
 	}
 
