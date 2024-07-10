@@ -1,83 +1,79 @@
 package forum
 
 import (
-    "time"
+	"time"
 )
 
 type User struct {
-    UserID   int
-    Email    string
-    Username string
-    Password string
+	UserID   int
+	Email    string
+	Username string
+	Password string
 }
 
 type Post struct {
-    PostID      int
-    UserID      int
-    PostContent string
-    CreatedAt   time.Time
+	PostID      int
+	UserID      int
+	PostContent string
+	CreatedAt   time.Time
 }
 
-
 type PostLike struct {
-    PostLikeID int
-    UserID     int
-    PostID     int
-    IsLike     bool
+	PostLikeID int  `json:"post_like_id"`
+	UserID     int  `json:"user_id"`
+	PostID     int  `json:"post_id"`
+	IsLike     bool `json:"is_like"`
 }
 
 type PostDislike struct {
-    PostDislikeID int
-    UserID        int
-    PostID     int
-    IsDislike        bool
+	PostDislikeID int  `json:"post_dislike_id"`
+	UserID        int  `json:"user_id"`
+	PostID        int  `json:"post_id"`
+	IsDislike     bool `json:"is_dislike"`
 }
 
-
 type Comment struct {
-    CommentID      int
-    PostID         int
-    UserID         int
-    CommentContent string
-    CreatedAt      time.Time 
-    Username       string
+	CommentID      int
+	PostID         int
+	UserID         int
+	CommentContent string
+	CreatedAt      time.Time
+	Username       string
 }
 
 type CommentLike struct {
-    CommentLikeID int
-    UserID        int
-    CommentID     int
-    IsLike        bool
+	CommentLikeID int  `json:"comment_like_id"`
+	UserID        int  `json:"user_id"`
+	CommentID     int  `json:"comment_id"`
+	IsLike        bool `json:"is_like"`
 }
 
 type CommentDislike struct {
-    CommentDislikeID int
-    UserID        int
-    CommentID     int
-    IsDislike        bool
+	CommentDislikeID int  `json:"comment_dislike_id"`
+	UserID           int  `json:"user_id"`
+	CommentID        int  `json:"comment_id"`
+	IsDislike        bool `json:"is_dislike"`
 }
 
 type Category struct {
-    CatID      int
-    CatName string
-    PostID     int
+	CatID   int
+	CatName string
+	PostID  int
 }
 
 type Tag struct {
-    TagID   int
-    PostID  int
-    TagName string
+	TagID   int
+	PostID  int
+	TagName string
 }
 
 type PostCategory struct {
-    PostID     int
-    CategoryID int
+	PostID     int
+	CategoryID int
 }
 
 type Session struct {
-    SessionID string
-    UserID    int
-    ExpiresAt time.Time
+	SessionID string
+	UserID    int
+	ExpiresAt time.Time
 }
-
-
