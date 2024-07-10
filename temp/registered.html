@@ -114,8 +114,9 @@
                               <small>on {{.CreatedAt}}</small>
                               <script src="https://use.fontawesome.com/fe459689b4.js"></script>
                               <br>
-                              <button class="btn" id="green" data-count="0"><i class="fa fa-thumbs-up fa-lg" aria-hidden="true"></i> <span class="count">0</span></button>
-                              <button class="btn" id="red" data-count="0"><i class="fa fa-thumbs-down fa-lg" aria-hidden="true"></i> <span class="count">0</span></button>
+                              <button class="btn" id="green" data-count="0" data-id="{{.CommentID}}"><i class="fa fa-thumbs-up fa-lg" aria-hidden="true"></i> <span class="count">0</span></button>
+                              <button class="btn" id="red" data-count="0" data-id="{{.CommentID}}"><i class="fa fa-thumbs-down fa-lg" aria-hidden="true"></i> <span class="count">0</span></button>
+                          </div>
                           </div>
                           {{end}}
                       </div>
@@ -132,95 +133,87 @@
       <p>Web Forum &copy; 2024</p>
   </footer>
   <script>
-document.addEventListener('DOMContentLoaded', function() {
-    var btns = document.querySelectorAll('.btn');
+ var btns = document.querySelectorAll('.btn');
 
-    btns.forEach(function(btn) {
-        btn.setAttribute('data-count', '0');
-        btn.querySelector('.count').textContent = '0';
+btns.forEach(function(btn) {
+    btn.setAttribute('data-count', '0');
+    btn.querySelector('.count').textContent = '0';
 
-        btn.addEventListener('click', function() {
-            var count = parseInt(this.getAttribute('data-count'));
-            var greenBtn = this.parentNode.querySelector('#green');
-            var redBtn = this.parentNode.querySelector('#red');
-            var isPost = this.parentNode.classList.contains('post');
-            var id = this.getAttribute('data-id');
+    btn.addEventListener('click', function() {
+        var count = parseInt(this.getAttribute('data-count'));
+        var greenBtn = this.parentNode.querySelector('#green');
+        var redBtn = this.parentNode.querySelector('#red');
+        var isPost = this.parentNode.classList.contains('post');
+        var id = this.getAttribute('data-id');
 
-            if (this.id === 'green') {
-                if (greenBtn.classList.contains('clicked')) {
-                    greenBtn.classList.remove('clicked');
-                    greenBtn.classList.remove('green');
-                    count = 0;
-                    sendFeedback('dislike', id, isPost);
-                } else {
-                    redBtn.classList.remove('clicked');
-                    redBtn.classList.remove('red');
-                    redBtn.querySelector('.count').textContent = '0';
-                    redBtn.setAttribute('data-count', '0');
-
-                    greenBtn.classList.toggle('green');
-                    count = (count === 0) ? 1 : 0;
-                    greenBtn.setAttribute('data-count', count);
-                    greenBtn.querySelector('.count').textContent = count;
-                    greenBtn.classList.add('clicked');
-
-                    sendFeedback('like', id, isPost);
-                }
+        if (this.id === 'green') {
+            if (greenBtn.classList.contains('clicked')) {
+                greenBtn.classList.remove('clicked');
+                greenBtn.classList.remove('green');
+                count = 0;
             } else {
-                if (redBtn.classList.contains('clicked')) {
-                    redBtn.classList.remove('clicked');
-                    redBtn.classList.remove('red');
-                    count = 0;
-                    sendFeedback('like', id, isPost);
-                } else {
-                    greenBtn.classList.remove('clicked');
-                    greenBtn.classList.remove('green');
-                    greenBtn.querySelector('.count').textContent = '0';
-                    greenBtn.setAttribute('data-count', '0');
+                redBtn.classList.remove('clicked');
+                redBtn.classList.remove('red');
+                redBtn.querySelector('.count').textContent = '0';
+                redBtn.setAttribute('data-count', '0');
 
-                    redBtn.classList.toggle('red');
-                    count = (count === 0) ? 1 : 0;
-                    redBtn.setAttribute('data-count', count);
-                    redBtn.querySelector('.count').textContent = count;
-                    redBtn.classList.add('clicked');
+                greenBtn.classList.toggle('green');
+                count = (count === 0) ? 1 : 0;
+                greenBtn.setAttribute('data-count', count);
+                greenBtn.querySelector('.count').textContent = count;
+                greenBtn.classList.add('clicked');
 
-                    sendFeedback('dislike', id, isPost);
-                }
+                sendFeedback('like', id, isPost);
             }
+        } else {
+            if (redBtn.classList.contains('clicked')) {
+                redBtn.classList.remove('clicked');
+                redBtn.classList.remove('red');
+                count = 0;
+            } else {
+                greenBtn.classList.remove('clicked');
+                greenBtn.classList.remove('green');
+                greenBtn.querySelector('.count').textContent = '0';
+                greenBtn.setAttribute('data-count', '0');
 
-            this.setAttribute('data-count', count);
-            this.querySelector('.count').textContent = count;
-        });
+                redBtn.classList.toggle('red');
+                count = (count === 0) ? 1 : 0;
+                redBtn.setAttribute('data-count', count);
+                redBtn.querySelector('.count').textContent = count;
+                redBtn.classList.add('clicked');
+
+                sendFeedback('dislike', id, isPost);
+            }
+        }
+
+        this.setAttribute('data-count', count);
+        this.querySelector('.count').textContent = count;
     });
-
-    function sendFeedback(type, id, isPost) {
-        var url = isPost ? '/feedback' : '/feedback';
-        var data = {
-            type: type,
-            id: id,
-            isPost: isPost,
-            userID: 123 // Replace with actual user ID
-        };
-
-        fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(data)
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            // Handle successful response if needed
-        })
-        .catch(error => {
-            console.error('Error:', error);
-        });
-    }
 });
 
+function sendFeedback(type, id, isPost) {
+    var url = isPost ? '/like-post' : '/like-comment';
+    if (type === 'dislike') {
+        url = isPost ? '/dislike-post' : '/dislike-comment';
+    }
+
+    var data = new FormData();
+    data.append(isPost ? 'postID' : 'commentID', id);
+
+    fetch(url, {
+        method: 'POST',
+        body: data
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        // Handle successful response if needed
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+}
   </script>
 </body>
 </html>
