@@ -27,7 +27,7 @@
             <datalist id="data2">
                 <option value="Sports">Sports</option>
                 <option value="News">News</option>
-                <option value="Others">Others(for now)</option>   
+                <option value="Others">Others(for now)</option> 
             </datalist>
             <br><br>
             <button type="submit">Apply filters</button>
@@ -103,6 +103,8 @@
                 <small>Posted on: {{.Post.CreatedAt}}</small>
                 <script src="https://use.fontawesome.com/fe459689b4.js"></script>
                 <br>
+                <button class="btn" id="green" disabled><i class="fa fa-thumbs-up fa-lg" aria-hidden="true"></i> <span class="count">{{.Post.LikeCount}}</span></button>
+                <button class="btn" id="red" disabled><i class="fa fa-thumbs-down fa-lg" aria-hidden="true"></i> <span class="count">{{.Post.DislikeCount}}</span></button>
                 <div class="comments">
                     {{range .Comments}}
                     <div class="comment">
@@ -111,6 +113,8 @@
                         <small>Commented by: {{.Username}} </small><br>
                         <small>on {{.CreatedAt}}</small>
                         <br>
+                        <button class="btn" id="green" disabled><i class="fa fa-thumbs-up fa-lg" aria-hidden="true"></i> <span class="count">{{.LikeCount}}</span></button>
+                        <button class="btn" id="red" disabled><i class="fa fa-thumbs-down fa-lg" aria-hidden="true"></i> <span class="count">{{.DislikeCount}}</span></button>
                     </div>
                     {{end}}
                 </div>
@@ -121,6 +125,7 @@
         </div>
     </div>
 </div>
+
 
 
   <footer>
