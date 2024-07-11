@@ -134,96 +134,77 @@
       <p>Web Forum &copy; 2024</p>
   </footer>
   <script>
- var btns = document.querySelectorAll('.btn');
+document.addEventListener('DOMContentLoaded', () => {
+    var feedbackType = ''; // Track current feedback type: 'like' or 'dislike'
 
-btns.forEach(function(btn) {
-    btn.setAttribute('data-count', '0');
-    btn.querySelector('.count').textContent = '0';
+    document.querySelectorAll('.btn').forEach(button => {
+        button.addEventListener('click', () => {
+            var type = button.id === 'green' ? 'like' : 'dislike';
+            handleFeedback(type, button);
+        });
+    });
 
-    btn.addEventListener('click', function() {
-        var count = parseInt(this.getAttribute('data-count'));
-        var greenBtn = this.parentNode.querySelector('#green');
-        var redBtn = this.parentNode.querySelector('#red');
-        var isPost = this.parentNode.classList.contains('post');
-        var id = this.getAttribute('data-id');
+    function handleFeedback(type, button) {
+        var postId = button.getAttribute('data-id');
+        var isPost = button.parentElement.classList.contains('post');
+        var otherButtonId = type === 'like' ? 'red' : 'green';
+        var otherButton = button.parentElement.querySelector(`#${otherButtonId}`);
 
-        if (this.id === 'green') {
-            if (greenBtn.classList.contains('clicked')) {
-                greenBtn.classList.remove('clicked');
-                greenBtn.classList.remove('green');
-                count = 0;
-            } else {
-                redBtn.classList.remove('clicked');
-                redBtn.classList.remove('red');
-                redBtn.querySelector('.count').textContent = '0';
-                redBtn.setAttribute('data-count', '0');
-
-                greenBtn.classList.toggle('green');
-                count = (count === 0) ? 1 : 0;
-                greenBtn.setAttribute('data-count', count);
-                greenBtn.querySelector('.count').textContent = count;
-                greenBtn.classList.add('clicked');
-
-                sendFeedback('like', id, isPost);
-            }
+        if (type === feedbackType) {
+            sendFeedback(`remove_${type}`, postId, isPost);
+            button.classList.remove('active');
+            feedbackType = '';
+            updateCount(button, 0);
         } else {
-            if (redBtn.classList.contains('clicked')) {
-                redBtn.classList.remove('clicked');
-                redBtn.classList.remove('red');
-                count = 0;
-            } else {
-                greenBtn.classList.remove('clicked');
-                greenBtn.classList.remove('green');
-                greenBtn.querySelector('.count').textContent = '0';
-                greenBtn.setAttribute('data-count', '0');
-
-                redBtn.classList.toggle('red');
-                count = (count === 0) ? 1 : 0;
-                redBtn.setAttribute('data-count', count);
-                redBtn.querySelector('.count').textContent = count;
-                redBtn.classList.add('clicked');
-
-                sendFeedback('dislike', id, isPost);
+            if (feedbackType !== '') {
+                sendFeedback(`remove_${feedbackType}`, postId, isPost);
+                var activeButton = button.parentElement.querySelector('.active');
+                if (activeButton) activeButton.classList.remove('active');
+                updateCount(otherButton, 0);
             }
+            feedbackType = type;
+            sendFeedback(type, postId, isPost);
+            button.classList.add('active');
+            updateCount(button, 1);
         }
-
-        this.setAttribute('data-count', count);
-        this.querySelector('.count').textContent = count;
-    });
-});
-
-function sendFeedback(type, id, isPost) {
-    var url = isPost ? '/like-post' : '/like-comment';
-    if (type === 'dislike') {
-        url = isPost ? '/dislike-post' : '/dislike-comment';
     }
 
-    var data = new FormData();
-    data.append(isPost ? 'postID' : 'commentID', id);
-
-    fetch(url, {
-        method: 'POST',
-        body: data
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-        // Handle successful response if needed
-    })
-    .catch(error => {
-        console.error('Error:', error);
-    });
+    function updateCount(button, count) {
+        button.setAttribute('data-count', count);
+        button.querySelector('.count').textContent = count;
     }
+
+    function sendFeedback(type, id, isPost) {
+        var url = isPost ? '/like-post' : '/like-comment';
+        if (type.includes('dislike')) {
+            url = isPost ? '/dislike-post' : '/dislike-comment';
+        }
+
+        var data = new FormData();
+        data.append(isPost ? 'postID' : 'commentID', id);
+
+        fetch(url, {
+            method: 'POST',
+            body: data
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            // Handle successful response if needed
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    }
+
     document.getElementById('clearFilters').addEventListener('click', function() {
-  // Get the current URL
-  var currentUrl = window.location.href;
-  // Remove the catCont2 query parameter from the URL
-  var newUrl = currentUrl.split('?')[0];
-
-  // Redirect to the new URL
-  window.location.href = newUrl;
+        var currentUrl = window.location.href;
+        var newUrl = currentUrl.split('?')[0];
+        window.location.href = newUrl;
+    });
 });
+
   </script>
 </body>
 </html>
