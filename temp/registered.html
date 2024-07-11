@@ -43,16 +43,16 @@
             <div class="post">
               <h4>Post Content:</h4>
                 <h3>User: {{.User.Username}}</h3>
-                <p>{{.Post.PostContent}}</p>
+                <p>Post: {{.Post.PostContent}}</p>
                 {{range .Categories}}
                 <p>Category: {{.CatName}}</p>
                 {{end}}
                 <small>Posted on: {{.Post.CreatedAt}}</small>
                 <script src="https://use.fontawesome.com/fe459689b4.js"></script>
                 <script src="https://use.fontawesome.com/fe459689b4.js"></script>
-<br>
-<button class="btn" id="green" data-count="0" data-id="{{.Post.PostID}}"><i class="fa fa-thumbs-up fa-lg" aria-hidden="true"></i> <span class="count">0</span></button>
-<button class="btn" id="red" data-count="0" data-id="{{.Post.PostID}}"><i class="fa fa-thumbs-down fa-lg" aria-hidden="true"></i> <span class="count">0</span></button>
+                <br>
+                <button class="btn" id="green" data-count="{{.Post.LikeCount}}" data-id="{{.Post.PostID}}"><i class="fa fa-thumbs-up fa-lg" aria-hidden="true"></i> <span class="count">{{.Post.LikeCount}}</span></button>
+                <button class="btn" id="red" data-count="{{.Post.DislikeCount}}" data-id="{{.Post.PostID}}"><i class="fa fa-thumbs-down fa-lg" aria-hidden="true"></i> <span class="count">{{.Post.DislikeCount}}</span></button>
 
                 {{if $.IsLoggedIn}}
                 <form action="/createC?postID={{.Post.PostID}}" method="post">
@@ -69,8 +69,8 @@
                         <small>on {{.CreatedAt}}</small>
                         <script src="https://use.fontawesome.com/fe459689b4.js"></script>
                         <br>
-                        <button class="btn" id="green" data-count="0" data-id="{{.CommentID}}"><i class="fa fa-thumbs-up fa-lg" aria-hidden="true"></i> <span class="count">0</span></button>
-                        <button class="btn" id="red" data-count="0" data-id="{{.CommentID}}"><i class="fa fa-thumbs-down fa-lg" aria-hidden="true"></i> <span class="count">0</span></button>
+                        <button class="btn" id="green" data-count="0" data-id="{{.CommentID}}"><i class="fa fa-thumbs-up fa-lg" aria-hidden="true"></i> <span class="count">{{.LikeCount}}</span></button>
+                        <button class="btn" id="red" data-count="0" data-id="{{.CommentID}}"><i class="fa fa-thumbs-down fa-lg" aria-hidden="true"></i> <span class="count">{{.DislikeCount}}</span></button>
                     </div>
                     {{end}}
                 </div>
@@ -83,52 +83,45 @@
   </div>
 
   <div class="logged-out-content">
-      <div class="container">
-          <div class="post-container">
-              <table>
-                  <tr><button><a href="doLogin">Login</a></button></tr>
-                  <tr><button><a href="doRegister">Register</a></button></tr>
-                  <tr><button><a href="/">Back to Main Page</a></button></tr>
-              </table>
-              {{range .Posts}}
-              <div class="post">
+    <div class="nav-bar">
+        <table id="cont">
+            <tr><button><a href="doLogin">Login</a></button></tr><br><br><br>
+            <tr><button><a href="doRegister">Register</a></button></tr><br><br><br>
+            <tr><button><a href="/">Back to Main Page</a></button></tr><br><br><br>
+        </table>
+    </div>
+    <div class="container">
+        <div class="post-container">
+            {{range .Posts}}
+            <div class="post">
                 <h4>Post Content:</h4>
-                  <h3>User: {{.User.Username}}</h3>
-                  <p>Content: {{.Post.PostContent}}</p>
-                  {{range .Categories}}
-                  <p>Category: {{.CatName}}</p>
-                  {{end}}
-                  <small>Posted on: {{.Post.CreatedAt}}</small>
-                  <script src="https://use.fontawesome.com/fe459689b4.js"></script>
-                  <script src="https://use.fontawesome.com/fe459689b4.js"></script>
-<br>
-<button class="btn" id="green" data-count="0" data-id="{{.Post.PostID}}"><i class="fa fa-thumbs-up fa-lg" aria-hidden="true"></i> <span class="count">0</span></button>
-<button class="btn" id="red" data-count="0" data-id="{{.Post.PostID}}"><i class="fa fa-thumbs-down fa-lg" aria-hidden="true"></i> <span class="count">0</span></button>
+                <h3>User: {{.User.Username}}</h3>
+                <p>Post: {{.Post.PostContent}}</p>
+                {{range .Categories}}
+                <p>Category: {{.CatName}}</p>
+                {{end}}
+                <small>Posted on: {{.Post.CreatedAt}}</small>
+                <script src="https://use.fontawesome.com/fe459689b4.js"></script>
+                <br>
+                <div class="comments">
+                    {{range .Comments}}
+                    <div class="comment">
+                        <h4>Comment Content:</h4>
+                        <p>Comment: {{.CommentContent}}</p>
+                        <small>Commented by: {{.Username}} </small><br>
+                        <small>on {{.CreatedAt}}</small>
+                        <br>
+                    </div>
+                    {{end}}
+                </div>
+            </div>
+            {{else}}
+            <p>No posts found yet.</p>
+            {{end}}
+        </div>
+    </div>
+</div>
 
-                  <form action="/createC?postID={{.Post.PostID}}" method="post">
-                      <div class="comments">
-                          {{range .Comments}}
-                          <div class="comment">
-                            <h4>Comment Content</h4>
-                              <p>Comment: {{.CommentContent}}</p>
-                              <small>Commented by: {{.Username}} on {{.CreatedAt}}</small>
-                              <small>on {{.CreatedAt}}</small>
-                              <script src="https://use.fontawesome.com/fe459689b4.js"></script>
-                              <br>
-                              <button class="btn" id="green" data-count="0" data-id="{{.CommentID}}"><i class="fa fa-thumbs-up fa-lg" aria-hidden="true"></i> <span class="count">0</span></button>
-                              <button class="btn" id="red" data-count="0" data-id="{{.CommentID}}"><i class="fa fa-thumbs-down fa-lg" aria-hidden="true"></i> <span class="count">0</span></button>
-                          </div>
-                          </div>
-                          {{end}}
-                      </div>
-                  </form>
-              </div>
-              {{else}}
-              <p>No posts found yet.</p>
-              {{end}}
-          </div>
-      </div>
-  </div>
 
   <footer>
       <p>Web Forum &copy; 2024</p>

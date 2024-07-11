@@ -128,7 +128,7 @@ func feedbackHandler(w http.ResponseWriter, r *http.Request) {
 		switch feedback.Type {
 		case "like":
 			if feedback.IsPost {
-				postLike := &PostLike{
+				postLike := &forum.PostLike{
 					UserID: feedback.UserID,
 					PostID: feedback.ID,
 					IsLike: true,
@@ -139,7 +139,7 @@ func feedbackHandler(w http.ResponseWriter, r *http.Request) {
 					return
 				}
 			} else {
-				commentLike := &CommentLike{
+				commentLike := &forum.CommentLike{
 					UserID:    feedback.UserID,
 					CommentID: feedback.ID,
 					IsLike:    true,
@@ -152,7 +152,7 @@ func feedbackHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		case "dislike":
 			if feedback.IsPost {
-				postdisLike := &PostDislike{
+				postdisLike := &forum.PostDislike{
 					UserID:    feedback.UserID,
 					PostID:    feedback.ID,
 					IsDislike: true,
@@ -163,7 +163,7 @@ func feedbackHandler(w http.ResponseWriter, r *http.Request) {
 					return
 				}
 			} else {
-				commentDisLike := &CommentDislike{
+				commentDisLike := &forum.CommentDislike{
 					UserID:    feedback.UserID,
 					CommentID: feedback.ID,
 					IsDislike: true,
@@ -199,7 +199,7 @@ func feedbackHandler(w http.ResponseWriter, r *http.Request) {
 //     return count, err
 // }
 
-func InsertCommentLike(db *sql.DB, commentLike *CommentLike) error {
+func InsertCommentLike(db *sql.DB, commentLike *forum.CommentLike) error {
 	// Check if the user has already liked the comment
 	var existingLike bool
 	err := db.QueryRow("SELECT EXISTS(SELECT 1 FROM comment_likes WHERE user_id = ? AND comment_id = ?)", commentLike.UserID, commentLike.CommentID).Scan(&existingLike)
@@ -249,7 +249,7 @@ func InsertCommentLike(db *sql.DB, commentLike *CommentLike) error {
 	return nil
 }
 
-func InsertCommentDislike(db *sql.DB, commentDislike *CommentDislike) error {
+func InsertCommentDislike(db *sql.DB, commentDislike *forum.CommentDislike) error {
 	// Check if the user has already disliked the comment
 	var existingDislike bool
 	err := db.QueryRow("SELECT EXISTS(SELECT 1 FROM comment_dislikes WHERE user_id = ? AND comment_id = ?)", commentDislike.UserID, commentDislike.CommentID).Scan(&existingDislike)
@@ -299,7 +299,7 @@ func InsertCommentDislike(db *sql.DB, commentDislike *CommentDislike) error {
 	return nil
 }
 
-func InsertPostDislike(db *sql.DB, postDislike *PostDislike) error {
+func InsertPostDislike(db *sql.DB, postDislike *forum.PostDislike) error {
 	// Check if the user has already disliked the post
 	var existingDislike bool
 	err := db.QueryRow("SELECT EXISTS(SELECT 1 FROM post_dislikes WHERE user_id = ? AND post_id = ?)", postDislike.UserID, postDislike.PostID).Scan(&existingDislike)
@@ -349,7 +349,7 @@ func InsertPostDislike(db *sql.DB, postDislike *PostDislike) error {
 	return nil
 }
 
-func InsertPostLike(db *sql.DB, postLike *PostLike) error {
+func InsertPostLike(db *sql.DB, postLike *forum.PostLike) error {
 	// Check if the user has already liked the post
 	var existingLike bool
 	err := db.QueryRow("SELECT EXISTS(SELECT 1 FROM post_likes WHERE user_id = ? AND post_id = ?)", postLike.UserID, postLike.PostID).Scan(&existingLike)
@@ -399,88 +399,66 @@ func InsertPostLike(db *sql.DB, postLike *PostLike) error {
 	return nil
 }
 
-type PostLike struct {
-	PostLikeID int
-	UserID     int
-	PostID     int
-	IsLike     bool
-}
 
 func handleLikePost(w http.ResponseWriter, r *http.Request) {
-	// Get the session and post ID
-	session, err := getSession(r)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+    session, err := getSession(r)
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
 
-	postID, err := strconv.Atoi(r.FormValue("postID"))
-	if err != nil {
-		http.Error(w, "Invalid post ID", http.StatusBadRequest)
-		return
-	}
+    postID, err := strconv.Atoi(r.FormValue("postID"))
+    if err != nil {
+        http.Error(w, "Invalid post ID", http.StatusBadRequest)
+        return
+    }
 
-	// Check if the user has already liked the post
-	var existingLike bool
-	err = database.QueryRow("SELECT EXISTS(SELECT 1 FROM post_likes WHERE user_id = ? AND post_id = ?)", session.UserID, postID).Scan(&existingLike)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	log.Printf("User %d liked post %d", session.UserID, postID)
 
-	if existingLike {
-		// Delete the existing like
-		_, err = database.Exec("DELETE FROM post_likes WHERE user_id = ? AND post_id = ?", session.UserID, postID)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		// Redirect or return a response
-		http.Redirect(w, r, "/registered", http.StatusSeeOther)
-		return
-	} else {
-		// Delete any existing dislike for the post
-		err = DeletePostDislike(database, session.UserID, postID)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
+    var existingLike bool
+    err = database.QueryRow("SELECT EXISTS(SELECT 1 FROM post_likes WHERE user_id = ? AND post_id = ?)", session.UserID, postID).Scan(&existingLike)
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
 
-		// Insert the like
-		postLike := &PostLike{
-			UserID: session.UserID,
-			PostID: postID,
-			IsLike: true,
-		}
-		err = InsertPostLike(database, postLike)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-	}
+    if existingLike {
+        _, err = database.Exec("DELETE FROM post_likes WHERE user_id = ? AND post_id = ?", session.UserID, postID)
+    } else {
+        err = DeletePostDislike(database, session.UserID, postID)
+        if err != nil {
+            http.Error(w, err.Error(), http.StatusInternalServerError)
+            return
+        }
+
+        postLike := &forum.PostLike{
+            UserID: session.UserID,
+            PostID: postID,
+            IsLike: true,
+        }
+        err = InsertPostLike(database, postLike)
+    }
+
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+
+    var likeCount int
+    err = database.QueryRow("SELECT COUNT(*) FROM post_likes WHERE post_id = ?", postID).Scan(&likeCount)
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+
+    w.Header().Set("Content-Type", "application/json")
+    json.NewEncoder(w).Encode(map[string]interface{}{
+        "success": true,
+        "count":   likeCount,
+    })
 
 	// Redirect or return a response
-	http.Redirect(w, r, "/registered", http.StatusSeeOther)
-}
-
-type PostDislike struct {
-	PostDislikeID int
-	UserID        int
-	PostID        int
-	IsDislike     bool
-}
-type CommentLike struct {
-	CommentLikeID int
-	UserID        int
-	CommentID     int
-	IsLike        bool
-}
-
-type CommentDislike struct {
-	CommentDislikeID int
-	UserID           int
-	CommentID        int
-	IsDislike        bool
+	// http.Redirect(w, r, "/registered", http.StatusSeeOther)
 }
 
 func handleDislikePost(w http.ResponseWriter, r *http.Request) {
@@ -496,6 +474,8 @@ func handleDislikePost(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid post ID", http.StatusBadRequest)
 		return
 	}
+
+	log.Printf("User %d disliked post %d", session.UserID, postID)
 
 	// Check if the user has already disliked the post
 	var existingDislike bool
@@ -524,7 +504,7 @@ func handleDislikePost(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Insert the dislike
-		postDislike := &PostDislike{
+		postDislike := &forum.PostDislike{
 			UserID:    session.UserID,
 			PostID:    postID,
 			IsDislike: true,
@@ -535,9 +515,21 @@ func handleDislikePost(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+	var dislikeCount int
+    err = database.QueryRow("SELECT COUNT(*) FROM post_dislikes WHERE post_id = ?", postID).Scan(&dislikeCount)
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+
+    w.Header().Set("Content-Type", "application/json")
+    json.NewEncoder(w).Encode(map[string]interface{}{
+        "success": true,
+        "count":   dislikeCount,
+    })
 
 	// Redirect or return a response
-	http.Redirect(w, r, "/registered", http.StatusSeeOther)
+	// http.Redirect(w, r, "/registered", http.StatusSeeOther)
 }
 
 func handleLikeComment(w http.ResponseWriter, r *http.Request) {
@@ -553,6 +545,8 @@ func handleLikeComment(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid comment ID", http.StatusBadRequest)
 		return
 	}
+
+	log.Printf("User %d liked comment %d", session.UserID, commentID)
 
 	// Check if the user has already liked the comment
 	var existingLike bool
@@ -581,7 +575,7 @@ func handleLikeComment(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Insert the like
-		commentLike := &CommentLike{
+		commentLike := &forum.CommentLike{
 			UserID:    session.UserID,
 			CommentID: commentID,
 			IsLike:    true,
@@ -592,9 +586,21 @@ func handleLikeComment(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+	var likeCount int
+    err = database.QueryRow("SELECT COUNT(*) FROM comment_likes WHERE comment_id = ?", commentID).Scan(&likeCount)
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+
+    w.Header().Set("Content-Type", "application/json")
+    json.NewEncoder(w).Encode(map[string]interface{}{
+        "success": true,
+        "count":   likeCount,
+    })
 
 	// Redirect or return a response
-	http.Redirect(w, r, "/registered", http.StatusSeeOther)
+	// http.Redirect(w, r, "/registered", http.StatusSeeOther)
 }
 
 func handleDislikeComment(w http.ResponseWriter, r *http.Request) {
@@ -610,6 +616,8 @@ func handleDislikeComment(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid comment ID", http.StatusBadRequest)
 		return
 	}
+
+	log.Printf("User %d disliked comment %d", session.UserID, commentID)
 
 	// Check if the user has already disliked the comment
 	var existingDislike bool
@@ -638,7 +646,7 @@ func handleDislikeComment(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Insert the dislike
-		commentDislike := &CommentDislike{
+		commentDislike := &forum.CommentDislike{
 			UserID:    session.UserID,
 			CommentID: commentID,
 			IsDislike: true,
@@ -650,8 +658,21 @@ func handleDislikeComment(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	var dislikeCount int
+    err = database.QueryRow("SELECT COUNT(*) FROM comment_dislikes WHERE comment_id = ?", commentID).Scan(&dislikeCount)
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+
+    w.Header().Set("Content-Type", "application/json")
+    json.NewEncoder(w).Encode(map[string]interface{}{
+        "success": true,
+        "count":   dislikeCount,
+    })
+
 	// Redirect or return a response
-	http.Redirect(w, r, "/registered", http.StatusSeeOther)
+	// http.Redirect(w, r, "/registered", http.StatusSeeOther)
 }
 
 func DeletePostLike(db *sql.DB, userID, postID int) error {
@@ -1190,95 +1211,98 @@ func createComment(w http.ResponseWriter, r *http.Request) {
 }
 
 func getPosts() ([]struct {
-	Post       forum.Post
-	User       forum.User
-	Comments   []forum.Comment
-	Categories []forum.Category
+    Post       forum.Post
+    User       forum.User
+    Comments   []forum.Comment
+    Categories []forum.Category
 }, error) {
-	query := `
-        SELECT p.post_id, p.user_id, p.post_content, p.post_created_at, u.username
+    query := `
+        SELECT p.post_id, p.user_id, p.post_content, p.post_created_at, u.username,
+               (SELECT COUNT(*) FROM post_likes WHERE post_id = p.post_id) as like_count,
+               (SELECT COUNT(*) FROM post_dislikes WHERE post_id = p.post_id) as dislike_count
         FROM posts p
         JOIN users u ON p.user_id = u.user_id
     `
 
-	rows, err := database.Query(query)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
+    rows, err := database.Query(query)
+    if err != nil {
+        return nil, err
+    }
+    defer rows.Close()
 
-	var postsWithUsers []struct {
-		Post       forum.Post
-		User       forum.User
-		Comments   []forum.Comment
-		Categories []forum.Category
-	}
+    var postsWithUsers []struct {
+        Post       forum.Post
+        User       forum.User
+        Comments   []forum.Comment
+        Categories []forum.Category
+    }
 
-	for rows.Next() {
-		var p forum.Post
-		var u forum.User
+    for rows.Next() {
+        var p forum.Post
+        var u forum.User
 
-		if err := rows.Scan(&p.PostID, &p.UserID, &p.PostContent, &p.CreatedAt, &u.Username); err != nil {
-			return nil, err
-		}
+        if err := rows.Scan(&p.PostID, &p.UserID, &p.PostContent, &p.CreatedAt, &u.Username, &p.LikeCount, &p.DislikeCount); err != nil {
+            return nil, err
+        }
 
-		comments, err := getCommentsByPostID(p.PostID)
-		if err != nil {
-			return nil, err
-		}
+        comments, err := getCommentsByPostID(p.PostID)
+        if err != nil {
+            return nil, err
+        }
 
-		categories, err := getCategoriesByPostID(p.PostID)
-		if err != nil {
-			return nil, err
-		}
+        categories, err := getCategoriesByPostID(p.PostID)
+        if err != nil {
+            return nil, err
+        }
 
-		postsWithUsers = append(postsWithUsers, struct {
-			Post       forum.Post
-			User       forum.User
-			Comments   []forum.Comment
-			Categories []forum.Category
-		}{p, u, comments, categories})
-	}
+        postsWithUsers = append(postsWithUsers, struct {
+            Post       forum.Post
+            User       forum.User
+            Comments   []forum.Comment
+            Categories []forum.Category
+        }{p, u, comments, categories})
+    }
 
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
+    if err := rows.Err(); err != nil {
+        return nil, err
+    }
 
-	return postsWithUsers, nil
+    return postsWithUsers, nil
 }
 
 func getCommentsByPostID(postID int) ([]forum.Comment, error) {
-	query := `
-        SELECT c.comment_content, c.comment_created_at, u.username
+    query := `
+        SELECT c.comment_id, c.comment_content, c.comment_created_at, u.username,
+               (SELECT COUNT(*) FROM comment_likes WHERE comment_id = c.comment_id) as like_count,
+               (SELECT COUNT(*) FROM comment_dislikes WHERE comment_id = c.comment_id) as dislike_count
         FROM comments c
         JOIN users u ON c.user_id = u.user_id
         WHERE c.post_id = ?
     `
-	rows, err := database.Query(query, postID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
+    rows, err := database.Query(query, postID)
+    if err != nil {
+        return nil, err
+    }
+    defer rows.Close()
 
-	var comments []forum.Comment
-	for rows.Next() {
-		var c forum.Comment
-		var u forum.User
+    var comments []forum.Comment
+    for rows.Next() {
+        var c forum.Comment
 
-		if err := rows.Scan(&c.CommentContent, &c.CreatedAt, &u.Username); err != nil {
-			return nil, err
-		}
+        if err := rows.Scan(&c.CommentID, &c.CommentContent, &c.CreatedAt, &c.Username, &c.LikeCount, &c.DislikeCount); err != nil {
+            return nil, err
+        }
 
-		c.Username = u.Username
-		comments = append(comments, c)
-	}
+        comments = append(comments, c)
+    }
 
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
+    if err := rows.Err(); err != nil {
+        return nil, err
+    }
 
-	return comments, nil
+    return comments, nil
 }
+
 
 func getCategoriesByPostID(postID int) ([]forum.Category, error) {
 	query := `

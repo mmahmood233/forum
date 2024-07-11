@@ -16,20 +16,22 @@ type Post struct {
 	UserID      int
 	PostContent string
 	CreatedAt   time.Time
+	LikeCount   int
+    DislikeCount int
 }
 
 type PostLike struct {
-	PostLikeID int  `json:"post_like_id"`
-	UserID     int  `json:"user_id"`
-	PostID     int  `json:"post_id"`
-	IsLike     bool `json:"is_like"`
+	PostLikeID int  
+	UserID     int  
+	PostID     int  
+	IsLike     bool 
 }
 
 type PostDislike struct {
-	PostDislikeID int  `json:"post_dislike_id"`
-	UserID        int  `json:"user_id"`
-	PostID        int  `json:"post_id"`
-	IsDislike     bool `json:"is_dislike"`
+	PostDislikeID int
+	UserID        int
+	PostID        int
+	IsDislike     bool
 }
 
 type Comment struct {
@@ -39,20 +41,22 @@ type Comment struct {
 	CommentContent string
 	CreatedAt      time.Time
 	Username       string
+	LikeCount   int
+    DislikeCount int
 }
 
 type CommentLike struct {
-	CommentLikeID int  `json:"comment_like_id"`
-	UserID        int  `json:"user_id"`
-	CommentID     int  `json:"comment_id"`
-	IsLike        bool `json:"is_like"`
+	CommentLikeID int
+	UserID        int
+	CommentID     int
+	IsLike        bool
 }
 
 type CommentDislike struct {
-	CommentDislikeID int  `json:"comment_dislike_id"`
-	UserID           int  `json:"user_id"`
-	CommentID        int  `json:"comment_id"`
-	IsDislike        bool `json:"is_dislike"`
+	CommentDislikeID int
+	UserID           int
+	CommentID        int
+	IsDislike        bool
 }
 
 type Category struct {
