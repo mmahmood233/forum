@@ -918,6 +918,12 @@ func parseMain(w http.ResponseWriter, r *http.Request) {
 
 	// Check if the user is logged in
 	isLoggedIn := isLoggedIn(r)
+	
+	var loggedInUser *forum.User
+	if isLoggedIn {
+        session, _ := getSession(r)
+        loggedInUser, _ = getUserByID(database, session.UserID)
+    }
 
 	// Filter posts based on the selected category
 	var filteredPosts []struct {
@@ -950,15 +956,28 @@ func parseMain(w http.ResponseWriter, r *http.Request) {
 		}
 		IsLoggedIn       bool
 		SelectedCategory string
+		LoggedInUser     *forum.User
 	}{
 		Posts:            filteredPosts,
 		IsLoggedIn:       isLoggedIn,
 		SelectedCategory: selectedCategory,
+		LoggedInUser:     loggedInUser,
 	}
 
 	// Render the template with the data
 	tmpl.Execute(w, templateData)
 }
+
+func getUserByID(db *sql.DB, userID int) (*forum.User, error) {
+    user := &forum.User{}
+    query := `SELECT user_id, email, username FROM users WHERE user_id = ?`
+    err := db.QueryRow(query, userID).Scan(&user.UserID, &user.Email, &user.Username)
+    if err != nil {
+        return nil, err
+    }
+    return user, nil
+}
+
 
 func categoryMatches(categories []forum.Category, selectedCategory string) bool {
 	if selectedCategory == "" {

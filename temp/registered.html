@@ -11,7 +11,12 @@
   <header>
       <h1>MAIN</h1>
   </header>
-
+  {{if .IsLoggedIn}}
+  <div class="welcome-message">
+      <h2>Welcome, {{.LoggedInUser.Username}}!</h2>
+  </div>
+  {{end}}
+  
   <div class="logged-in-content">
     <div class="nav-bar">
       <table id="cont">
@@ -27,7 +32,7 @@
             <datalist id="data2">
                 <option value="Sports">Sports</option>
                 <option value="News">News</option>
-                <option value="Others">Others(for now)</option> 
+                <option value="Others">Others</option> 
             </datalist>
             <br><br>
             <button type="submit">Apply filters</button>

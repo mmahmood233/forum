@@ -24,6 +24,7 @@ body {
   margin: 0 auto;
 }
 
+
 header {
   position: fixed;
   top: 0;
@@ -42,6 +43,14 @@ header h1 {
   text-align: center;
   color: var(--primary-color);
 }
+
+.welcome-message h2 {
+  color: #1da1f2;
+  position: fixed;
+  background-color: rgba(255, 255, 255, 0.95);
+  z-index: 1000;
+}
+
 
 .logged-in-content {
   display: flex;
@@ -177,6 +186,14 @@ input[type="text"], textarea {
   font-size: 14px;
   padding: 0;
   margin-right: 20px;
+}
+
+.btn#green:hover, .btn#green:active, .btn#green:focus {
+  color: #28a745; /* Green color */
+}
+
+.btn#red:hover, .btn#red:active, .btn#red:focus {
+  color: #dc3545; /* Red color */
 }
 
 .btn#green:hover, .btn#red:hover {
