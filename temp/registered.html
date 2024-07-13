@@ -33,6 +33,8 @@
                 <option value="Sports">Sports</option>
                 <option value="News">News</option>
                 <option value="Others">Others</option> 
+                <option value="My Created Posts">My Created Posts</option>
+                <option value="My Liked Posts">My Liked Posts</option>
             </datalist>
             <br><br>
             <button type="submit">Apply filters</button>
@@ -56,8 +58,8 @@
                 <script src="https://use.fontawesome.com/fe459689b4.js"></script>
                 <script src="https://use.fontawesome.com/fe459689b4.js"></script>
                 <br>
-                <button class="btn" id="green" data-count="{{.Post.LikeCount}}" data-id="{{.Post.PostID}}"><i class="fa fa-thumbs-up fa-lg" aria-hidden="true"></i> <span class="count">{{.Post.LikeCount}}</span></button>
-                <button class="btn" id="red" data-count="{{.Post.DislikeCount}}" data-id="{{.Post.PostID}}"><i class="fa fa-thumbs-down fa-lg" aria-hidden="true"></i> <span class="count">{{.Post.DislikeCount}}</span></button>
+                <button class="btn" id="green" data-count="{{.Post.LikeCount}}" data-id="{{.Post.PostID}}"><i class="fa fa-thumbs-up fa-lg" aria-hidden="true"></i> <span class="count" id="like-count-{{.Post.PostID}}">{{.Post.LikeCount}}</span></button>
+                <button class="btn" id="red" data-count="{{.Post.DislikeCount}}" data-id="{{.Post.PostID}}"><i class="fa fa-thumbs-down fa-lg" aria-hidden="true"></i> <span class="count" id="dislike-count-{{.Post.PostID}}">{{.Post.DislikeCount}}</span></button>
 
                 {{if $.IsLoggedIn}}
                 <form action="/createC?postID={{.Post.PostID}}" method="post">
@@ -74,8 +76,8 @@
                         <small>on {{.CreatedAt}}</small>
                         <script src="https://use.fontawesome.com/fe459689b4.js"></script>
                         <br>
-                        <button class="btn" id="green" data-count="0" data-id="{{.CommentID}}"><i class="fa fa-thumbs-up fa-lg" aria-hidden="true"></i> <span class="count">{{.LikeCount}}</span></button>
-                        <button class="btn" id="red" data-count="0" data-id="{{.CommentID}}"><i class="fa fa-thumbs-down fa-lg" aria-hidden="true"></i> <span class="count">{{.DislikeCount}}</span></button>
+                        <button class="btn" id="green" data-count="0" data-id="{{.CommentID}}"><i class="fa fa-thumbs-up fa-lg" aria-hidden="true"></i> <span class="count" id="like-count-comment-{{.CommentID}}">{{.LikeCount}}</span></button>
+                        <button class="btn" id="red" data-count="0" data-id="{{.CommentID}}"><i class="fa fa-thumbs-down fa-lg" aria-hidden="true"></i> <span class="count" id="dislike-count-comment-{{.CommentID}}">{{.DislikeCount}}</span></button>
                     </div>
                     {{end}}
                 </div>
@@ -137,77 +139,99 @@
       <p>Web Forum &copy; 2024</p>
   </footer>
   <script>
-document.addEventListener('DOMContentLoaded', () => {
-    var feedbackType = ''; // Track current feedback type: 'like' or 'dislike'
-
-    document.querySelectorAll('.btn').forEach(button => {
-        button.addEventListener('click', () => {
-            var type = button.id === 'green' ? 'like' : 'dislike';
-            handleFeedback(type, button);
+    document.addEventListener('DOMContentLoaded', () => {
+        var feedbackType = ''; // Track current feedback type: 'like' or 'dislike'
+    
+        document.querySelectorAll('.btn').forEach(button => {
+            button.addEventListener('click', () => {
+                var type = button.id === 'green' ? 'like' : 'dislike';
+                handleFeedback(type, button);
+            });
         });
-    });
+    
+        function handleFeedback(type, button) {
+    var postId = button.getAttribute('data-id');
+    var isPost = button.parentElement.classList.contains('post');
+    var otherButtonId = type === 'like' ? 'red' : 'green';
+    var otherButton = button.parentElement.querySelector(`#${otherButtonId}`);
 
-    function handleFeedback(type, button) {
-        var postId = button.getAttribute('data-id');
-        var isPost = button.parentElement.classList.contains('post');
-        var otherButtonId = type === 'like' ? 'red' : 'green';
-        var otherButton = button.parentElement.querySelector(`#${otherButtonId}`);
+    if (button.classList.contains('active')) {
+        // Remove feedback
+        button.classList.remove('active');
+        updateCount(button, parseInt(button.getAttribute('data-count')) - 1);
+        sendFeedback(`remove_${type}`, postId, isPost);
+    } else {
+        // Add feedback
+        button.classList.add('active');
+        updateCount(button, parseInt(button.getAttribute('data-count')) + 1);
 
-        if (type === feedbackType) {
-            sendFeedback(`remove_${type}`, postId, isPost);
-            button.classList.remove('active');
-            feedbackType = '';
-            updateCount(button, 0);
-        } else {
-            if (feedbackType !== '') {
-                sendFeedback(`remove_${feedbackType}`, postId, isPost);
-                var activeButton = button.parentElement.querySelector('.active');
-                if (activeButton) activeButton.classList.remove('active');
-                updateCount(otherButton, 0);
-            }
-            feedbackType = type;
-            sendFeedback(type, postId, isPost);
-            button.classList.add('active');
-            updateCount(button, 1);
-        }
-    }
-
-    function updateCount(button, count) {
-        button.setAttribute('data-count', count);
-        button.querySelector('.count').textContent = count;
-    }
-
-    function sendFeedback(type, id, isPost) {
-        var url = isPost ? '/like-post' : '/like-comment';
-        if (type.includes('dislike')) {
-            url = isPost ? '/dislike-post' : '/dislike-comment';
+        // Remove other feedback if exists
+        if (otherButton.classList.contains('active')) {
+            otherButton.classList.remove('active');
+            updateCount(otherButton, parseInt(otherButton.getAttribute('data-count')) - 1);
         }
 
-        var data = new FormData();
-        data.append(isPost ? 'postID' : 'commentID', id);
-
-        fetch(url, {
-            method: 'POST',
-            body: data
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            // Handle successful response if needed
-        })
-        .catch(error => {
-            console.error('Error:', error);
-        });
+        sendFeedback(type, postId, isPost);
     }
 
-    document.getElementById('clearFilters').addEventListener('click', function() {
-        var currentUrl = window.location.href;
-        var newUrl = currentUrl.split('?')[0];
-        window.location.href = newUrl;
+    // Refresh the page after a short delay
+    setTimeout(function() {
+        location.reload();
+    }, 100);
+}
+    
+        function updateCount(button, count) {
+            button.setAttribute('data-count', count);
+            button.querySelector('.count').textContent = count;
+            const id = button.getAttribute('data-id');
+            const isPost = button.closest('.post') !== null;
+            const type = button.id === 'green' ? 'like' : 'dislike';
+            const elementId = `${type}-count-${isPost ? '' : 'comment-'}${id}`;
+            const countElement = document.getElementById(elementId);
+            if (countElement) {
+                countElement.textContent = count;
+        }
+        }
+    
+        function sendFeedback(type, id, isPost) {
+            var url = isPost ? '/like-post' : '/like-comment';
+            if (type.includes('dislike')) {
+                url = isPost ? '/dislike-post' : '/dislike-comment';
+            }
+    
+            var data = new FormData();
+            data.append(isPost ? 'postID' : 'commentID', id);
+    
+            fetch(url, {
+                method: 'POST',
+                body: data
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                // Handle successful response if needed
+                return response.json();
+            })
+            .then(data => {
+            if (data.success) {
+                const button = document.querySelector(`[data-id="${id}"]#${type === 'like' ? 'green' : 'red'}`);
+                updateCount(button, data.count);
+            }
+        })
+            .catch(error => {
+                console.error('Error:', error);
+                window.location.reload();
+            });
+        }
+    
+        document.getElementById('clearFilters').addEventListener('click', function() {
+            var currentUrl = window.location.href;
+            var newUrl = currentUrl.split('?')[0];
+            window.location.href = newUrl;
+        });
     });
-});
-
-  </script>
+    
+    </script>
 </body>
 </html>

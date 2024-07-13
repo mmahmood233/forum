@@ -451,6 +451,8 @@ func handleLikePost(w http.ResponseWriter, r *http.Request) {
         return
     }
 
+	// http.Redirect(w, r, "/registered", http.StatusSeeOther)
+
     w.Header().Set("Content-Type", "application/json")
     json.NewEncoder(w).Encode(map[string]interface{}{
         "success": true,
@@ -493,8 +495,6 @@ func handleDislikePost(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		// Redirect or return a response
-		http.Redirect(w, r, "/registered", http.StatusSeeOther)
-		return
 	} else {
 		// Delete any existing like for the post
 		err = DeletePostLike(database, session.UserID, postID)
@@ -521,6 +521,9 @@ func handleDislikePost(w http.ResponseWriter, r *http.Request) {
         http.Error(w, err.Error(), http.StatusInternalServerError)
         return
     }
+
+	// http.Redirect(w, r, "/registered", http.StatusSeeOther)
+
 
     w.Header().Set("Content-Type", "application/json")
     json.NewEncoder(w).Encode(map[string]interface{}{
@@ -563,9 +566,7 @@ func handleLikeComment(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		// Redirect or return a response
-		http.Redirect(w, r, "/registered", http.StatusSeeOther)
-		return
+
 	} else {
 		// Delete any existing dislike for the comment
 		err = DeleteCommentDislike(database, session.UserID, commentID)
@@ -592,6 +593,9 @@ func handleLikeComment(w http.ResponseWriter, r *http.Request) {
         http.Error(w, err.Error(), http.StatusInternalServerError)
         return
     }
+
+	// http.Redirect(w, r, "/registered", http.StatusSeeOther)
+
 
     w.Header().Set("Content-Type", "application/json")
     json.NewEncoder(w).Encode(map[string]interface{}{
@@ -635,8 +639,7 @@ func handleDislikeComment(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		// Redirect or return a response
-		http.Redirect(w, r, "/registered", http.StatusSeeOther)
-		return
+
 	} else {
 		// Delete any existing like for the comment
 		err = DeleteCommentLike(database, session.UserID, commentID)
@@ -664,6 +667,9 @@ func handleDislikeComment(w http.ResponseWriter, r *http.Request) {
         http.Error(w, err.Error(), http.StatusInternalServerError)
         return
     }
+
+	// http.Redirect(w, r, "/registered", http.StatusSeeOther)
+
 
     w.Header().Set("Content-Type", "application/json")
     json.NewEncoder(w).Encode(map[string]interface{}{
@@ -934,9 +940,21 @@ func parseMain(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for _, postWithUser := range postsWithUsers {
-		if selectedCategory == "" || categoryMatches(postWithUser.Categories, selectedCategory) {
-			filteredPosts = append(filteredPosts, postWithUser)
-		}
+        if selectedCategory == "My Created Posts" {
+            if isLoggedIn && loggedInUser != nil && postWithUser.Post.UserID == loggedInUser.UserID {
+                filteredPosts = append(filteredPosts, postWithUser)
+            }
+        } else if selectedCategory == "My Liked Posts" {
+            if isLoggedIn && loggedInUser != nil {
+                var userLiked bool
+                err = database.QueryRow("SELECT EXISTS(SELECT 1 FROM post_likes WHERE user_id = ? AND post_id = ?)", loggedInUser.UserID, postWithUser.Post.PostID).Scan(&userLiked)
+                if userLiked {
+                    filteredPosts = append(filteredPosts, postWithUser)
+                }
+            }
+        } else if selectedCategory == "" || categoryMatches(postWithUser.Categories, selectedCategory) {
+            filteredPosts = append(filteredPosts, postWithUser)
+        }
 	}
 
 	// Parse the HTML template file
