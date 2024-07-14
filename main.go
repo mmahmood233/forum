@@ -1024,37 +1024,52 @@ func getSessionID() string {
 var sessionData = make(map[string]*forum.Session)
 
 func createSession(w http.ResponseWriter, userID int) string {
-	sessionID := getSessionID()
-	sessionObj := &forum.Session{
-		SessionID: sessionID,
-		UserID:    userID,
-		ExpiresAt: time.Now().Add(24 * time.Hour), // Set the expiration time (e.g., 24 hours)
-	}
-	sessionData[sessionID] = sessionObj
+    // Delete any existing sessions for this user
+    err := deleteExistingSessionsForUser(userID)
+    if err != nil {
+        log.Printf("Error deleting existing sessions: %v", err)
+        // You may want to handle this error more gracefully
+    }
 
-	cookie := http.Cookie{
-		Name:     "session_id",
-		Value:    sessionID,
-		Path:     "/",
-		HttpOnly: true,
-	}
+    sessionID := getSessionID()
+    sessionObj := &forum.Session{
+        SessionID: sessionID,
+        UserID:    userID,
+        ExpiresAt: time.Now().Add(24 * time.Hour),
+    }
+    sessionData[sessionID] = sessionObj
 
-	http.SetCookie(w, &cookie)
+    cookie := http.Cookie{
+        Name:     "session_id",
+        Value:    sessionID,
+        Path:     "/",
+        HttpOnly: true,
+    }
 
-	// Insert the session data into the database
-	_, err := database.Exec("INSERT INTO sessions (session_id, user_id, expires_at) VALUES (?, ?, ?)", sessionID, userID, sessionObj.ExpiresAt)
-	if err != nil {
-		log.Printf("Error inserting session data: %v", err)
-		// You may want to handle the error more gracefully here
-	}
+    http.SetCookie(w, &cookie)
 
-	return sessionID
+    // Insert the new session data into the database
+    _, err = database.Exec("INSERT INTO sessions (session_id, user_id, expires_at) VALUES (?, ?, ?)", sessionID, userID, sessionObj.ExpiresAt)
+    if err != nil {
+        log.Printf("Error inserting session data: %v", err)
+        // You may want to handle this error more gracefully
+    }
+
+    return sessionID
 }
+
+
+func deleteExistingSessionsForUser(userID int) error {
+    _, err := database.Exec("DELETE FROM sessions WHERE user_id = ?", userID)
+    return err
+}
+
 
 func getSession(r *http.Request) (*forum.Session, error) {
 	cookie, err := r.Cookie("session_id")
 	if err != nil {
-		return nil, err
+		// return nil, err
+		return nil, errors.New("invalid session")
 	}
 	sessionID := cookie.Value
 
