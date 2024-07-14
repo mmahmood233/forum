@@ -15,7 +15,7 @@ type Post struct {
 	PostID      int
 	UserID      int
 	PostContent string
-	CreatedAt   time.Time
+	CreatedAt   string
 	LikeCount   int
     DislikeCount int
 }
@@ -39,7 +39,7 @@ type Comment struct {
 	PostID         int
 	UserID         int
 	CommentContent string
-	CreatedAt      time.Time
+	CreatedAt      string
 	Username       string
 	LikeCount   int
     DislikeCount int

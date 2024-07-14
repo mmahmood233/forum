@@ -27,15 +27,16 @@
           <tr><button><a href="createP">Create Post</a></button></tr>
           <br><br>
           <form action="/registered" method="get">
-            <input type="text" name="catCont2" class="size" autocomplete="off" placeholder="Choose Category..." list="data2">
             <!-- <br><br> -->
-            <datalist id="data2">
+            <select name="catCont2" id="data2" class="search">
+                <option value="" disabled selected>Choose Category...</option>
+                <option value="None">None</option>
                 <option value="Sports">Sports</option>
                 <option value="News">News</option>
-                <option value="Others">Others</option> 
+                <option value="Announcements">Announcements</option> 
                 <option value="My Created Posts">My Created Posts</option>
                 <option value="My Liked Posts">My Liked Posts</option>
-            </datalist>
+            </select>
             <br><br>
             <button type="submit">Apply filters</button>
             <br><br>
@@ -94,6 +95,7 @@
         <table id="cont">
             <tr><button><a href="doLogin">Login</a></button></tr><br><br><br>
             <tr><button><a href="doRegister">Register</a></button></tr><br><br><br>
+            <tr></tr><button><a href="/">Create Post</a></button></tr><br><br><br>
             <tr><button><a href="/">Back to Main Page</a></button></tr><br><br><br>
         </table>
     </div>
@@ -111,7 +113,8 @@
                 <script src="https://use.fontawesome.com/fe459689b4.js"></script>
                 <br>
                 <button class="btn" id="green" disabled><i class="fa fa-thumbs-up fa-lg" aria-hidden="true"></i> <span class="count">{{.Post.LikeCount}}</span></button>
-                <button class="btn" id="red" disabled><i class="fa fa-thumbs-down fa-lg" aria-hidden="true"></i> <span class="count">{{.Post.DislikeCount}}</span></button>
+                <button class="btn" id="red" disabled><i class="fa fa-thumbs-down fa-lg" aria-hidden="true"></i> <span class="count">{{.Post.DislikeCount}}</span></button><br><br>
+                <button type="submit"><a href="/">Add Comment</a></button>
                 <div class="comments">
                     {{range .Comments}}
                     <div class="comment">
@@ -120,7 +123,7 @@
                         <small>Commented by: {{.Username}} </small><br>
                         <small>on {{.CreatedAt}}</small>
                         <br>
-                        <button class="btn" id="green" disabled><i class="fa fa-thumbs-up fa-lg" aria-hidden="true"></i> <span class="count">{{.LikeCount}}</span></button>
+                        <button class="btn" id="green" disabled><i class="fa fa-thumbs-up fa-lg" aria-hidden="true"></i><span class="count">{{.LikeCount}}</span></button>
                         <button class="btn" id="red" disabled><i class="fa fa-thumbs-down fa-lg" aria-hidden="true"></i> <span class="count">{{.DislikeCount}}</span></button>
                     </div>
                     {{end}}

@@ -952,7 +952,11 @@ func parseMain(w http.ResponseWriter, r *http.Request) {
                     filteredPosts = append(filteredPosts, postWithUser)
                 }
             }
-        } else if selectedCategory == "" || categoryMatches(postWithUser.Categories, selectedCategory) {
+        } else if selectedCategory == "None" {
+            if len(postWithUser.Categories) == 0 || (len(postWithUser.Categories) == 1 && postWithUser.Categories[0].CatName == "None") {
+                filteredPosts = append(filteredPosts, postWithUser)
+            } 
+			} else if selectedCategory == "" || categoryMatches(postWithUser.Categories, selectedCategory) {
             filteredPosts = append(filteredPosts, postWithUser)
         }
 	}
@@ -1140,12 +1144,16 @@ func createPost(w http.ResponseWriter, r *http.Request) {
 
 		postContent := r.FormValue("postCont")
 		categoryName := r.FormValue("catCont")
+		if categoryName == "" {
+			categoryName = "None"
+		}	
+	
 
 		// Create a new Post struct
 		post := &forum.Post{
 			UserID:      sessionObj.UserID,
 			PostContent: postContent,
-			CreatedAt:   time.Now(),
+			CreatedAt:   time.Now().Format("02/01/2006 15:04:05"),
 		}
 
 		// Insert the post into the database
@@ -1233,7 +1241,7 @@ func createComment(w http.ResponseWriter, r *http.Request) {
 			UserID:         userID,
 			PostID:         postIDInt,
 			CommentContent: comContent,
-			CreatedAt:      time.Now(),
+			CreatedAt:      time.Now().Format("02/01/2006 15:04:05"),
 		}
 
 		err = insertComment(comment)
@@ -1290,6 +1298,9 @@ func getPosts() ([]struct {
         categories, err := getCategoriesByPostID(p.PostID)
         if err != nil {
             return nil, err
+        }
+		if len(categories) == 0 {
+            categories = append(categories, forum.Category{CatName: "None"})
         }
 
         postsWithUsers = append(postsWithUsers, struct {
@@ -1370,3 +1381,4 @@ func getCategoriesByPostID(postID int) ([]forum.Category, error) {
 
 	return categories, nil
 }
+

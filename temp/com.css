@@ -124,3 +124,11 @@ footer {
         width: 95%;
     }
 }
+
+.search2 {
+    border: 1px solid var(--border-color);
+    width: 500px;
+    height: 35px;
+    font-size: 16px;
+    padding: 5px;
+}

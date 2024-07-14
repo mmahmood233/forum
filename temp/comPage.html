@@ -16,12 +16,13 @@
                     <h2>Create a Post</h2>
                     <form action="/createP" method="post">
                         <textarea name="postCont" placeholder="Post Content..." required></textarea>
-                        <input type="text" name = "catCont" class="size" autocomplete="off" placeholder="Choose Category..." list="data">
-                        <datalist id = "data">
-                         <option value="Sports">Sports</option>
+                        <select name="catCont" id="data" class="search2">
+                        <option value="" disabled selected>Choose Category...</option>
+                        <option value="None">None</option>
+                        <option value="Sports">Sports</option>
                         <option value="News">News</option>
-                        <option value="Others">Others(for now)</option>  
-                        </datalist>
+                        <option value="Announcements">Announcements</option>  
+                        </select><br>
                         <button type="submit">Create Post</button><br><br>
                         <button><a href="/registered">Back</a></button>
                         </form>

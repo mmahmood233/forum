@@ -280,3 +280,10 @@ form[action="/"] button {
     width: 100%;
   }
 }
+
+.search {
+  width: 250px;
+  height: 40px;
+  font-size: 16px;
+  padding: 5px;
+}
