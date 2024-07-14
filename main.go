@@ -899,6 +899,10 @@ func handleError(w http.ResponseWriter, data *forum.Error) {
 }
 
 func mainpage(w http.ResponseWriter, r *http.Request) {
+	if isLoggedIn(r) {
+        http.Redirect(w, r, "/registered", http.StatusSeeOther)
+        return
+    }
 	if r.URL.Path!= "/" {
 		handleError(w, &forum.Error{Err: 404, ErrStr: "Error 404 found"})
 		return
