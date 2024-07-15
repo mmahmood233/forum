@@ -705,6 +705,7 @@ func DeleteCommentDislike(db *sql.DB, userID, commentID int) error {
 
 func handleReg(w http.ResponseWriter, r *http.Request) {
 	var successMessage string
+	var errorMessage string
 
 	if r.Method == http.MethodPost {
 		email := r.FormValue("email")
@@ -723,14 +724,19 @@ func handleReg(w http.ResponseWriter, r *http.Request) {
 		// Insert the new user into the database
 		err := forum.InsertUser(database, user)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
+			if err.Error() == "user with this email already exists" {
+				errorMessage = "User is already taken!"
+			} else {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+		} else {
+			successMessage = "Registration successful!"
 		}
 
 		// Print the user struct to verify the ID has been updated
 		fmt.Printf("User Struct after insertion: %+v\n", user)
 
-		successMessage = "Registration successful!"
 	}
 
 	// Parse the HTML template file
@@ -740,12 +746,14 @@ func handleReg(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Define and initialize the anonymous struct
 	data := struct {
 		SuccessMessage string
+		ErrorMessage   string
 	}{
 		SuccessMessage: successMessage,
+		ErrorMessage:   errorMessage,
 	}
+	
 
 	// Render the template with the data
 	tmpl.Execute(w, data)

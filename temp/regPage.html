@@ -18,6 +18,9 @@
             {{if .SuccessMessage}}
             <div class="success-message">{{.SuccessMessage}}</div>
             {{end}}
+            {{if .ErrorMessage}}
+            <div class="error-message">{{.ErrorMessage}}</p>
+            {{end}}
             <form action="/doRegister" method="post">
                 <input type="text" name="username" placeholder="Username" required>
                 <input type="email" name="email" placeholder="Email" required>
