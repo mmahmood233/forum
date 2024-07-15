@@ -134,3 +134,13 @@ button a {
     text-decoration: none;
     color: var(--primary-color);
 }
+
+.account-query {
+    font-size: 14px;
+    margin-top: 20px;
+}
+
+.account-query a {
+    color: var(--primary-color);
+    text-decoration: none;
+}

@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="login.css">
     <title>Login Page</title>
-   
 </head>
 <body>
     <header>
@@ -19,7 +18,7 @@
             <div class="login-message">{{.LoginMessage}}</div>
             {{end}}
             <form action="/doLogin" method="post">
-                <input type="email" name="email2" placeholder="Email" required>
+                <input type="text" name="identifier" placeholder="Email or Username" required>
                 <input type="password" name="password2" placeholder="Password" required>
                 <input type="submit" value="Login">
                 <button><a href="/">Back</a></button>

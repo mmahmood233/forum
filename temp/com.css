@@ -132,3 +132,17 @@ footer {
     font-size: 16px;
     padding: 5px;
 }
+
+.category-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+.category-option {
+    display: flex;
+    align-items: center;
+}
+.category-option input[type="checkbox"] {
+    margin-right: 10px;
+}

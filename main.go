@@ -15,6 +15,7 @@ import (
 	"os"
 	"strconv"
 	"time"
+	"strings"
 
 	_ "modernc.org/sqlite"
 
@@ -725,10 +726,9 @@ func handleReg(w http.ResponseWriter, r *http.Request) {
 		err := forum.InsertUser(database, user)
 		if err != nil {
 			if err.Error() == "user with this email already exists" {
-				errorMessage = "User is already taken!"
+				errorMessage = "This email is already taken!"
 			} else {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
+				errorMessage = "This username is already taken!"
 			}
 		} else {
 			successMessage = "Registration successful!"
@@ -760,47 +760,47 @@ func handleReg(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleLog(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodPost {
-		email := r.FormValue("email2")
-		password := r.FormValue("password2")
+    if r.Method == http.MethodPost {
+        identifier := r.FormValue("identifier")
+        password := r.FormValue("password2")
 
-		log.Printf("Received form data: email=%s, password=%s\n", email, password)
+        log.Printf("Received form data: identifier=%s, password=%s\n", identifier, password)
 
-		// Authenticate the user (e.g., check the email and password)
-		user, err := forum.ValByEmail(database, email)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
+        // Authenticate the user (e.g., check the email/username and password)
+        user, err := forum.ValByEmailOrUsername(database, identifier)
+        if err != nil {
+            http.Error(w, err.Error(), http.StatusInternalServerError)
+            return
+        }
 
-		if user == nil || user.Password != password {
-			http.Error(w, "Invalid email or password", http.StatusUnauthorized)
-			return
-		}
+        if user == nil || user.Password != password {
+            http.Error(w, "Invalid email/username or password", http.StatusUnauthorized)
+            return
+        }
 
-		// Create a new session for the user
-		sessionID := createSession(w, user.UserID)
+        // Create a new session for the user
+        sessionID := createSession(w, user.UserID)
 
-		// Store the user ID in the session
-		session[sessionID] = &forum.Session{
-			UserID:    user.UserID,
-			ExpiresAt: time.Now().Add(time.Hour * 24),
-		}
+        // Store the user ID in the session
+        session[sessionID] = &forum.Session{
+            UserID:    user.UserID,
+            ExpiresAt: time.Now().Add(time.Hour * 24),
+        }
 
-		// Redirect the user to the home page or another page
-		http.Redirect(w, r, "/registered", http.StatusSeeOther)
-		return
-	}
+        // Redirect the user to the home page or another page
+        http.Redirect(w, r, "/registered", http.StatusSeeOther)
+        return
+    }
 
-	// Parse the HTML template file
-	tmpl, err := template.ParseFiles("temp/loginPage.html")
-	if err != nil {
-		handleError(w, &forum.Error{Err: 500, ErrStr: "Error 500 found"})
-		return
-	}
+    // Parse the HTML template file
+    tmpl, err := template.ParseFiles("temp/loginPage.html")
+    if err != nil {
+        handleError(w, &forum.Error{Err: 500, ErrStr: "Error 500 found"})
+        return
+    }
 
-	// Render the template
-	tmpl.Execute(w, nil)
+    // Render the template
+    tmpl.Execute(w, nil)
 }
 
 func logout(w http.ResponseWriter, r *http.Request) {
@@ -1065,7 +1065,7 @@ func createSession(w http.ResponseWriter, userID int) string {
     if err != nil {
         log.Printf("Error inserting session data: %v", err)
         // You may want to handle this error more gracefully
-    }
+    }	
 
     return sessionID
 }
@@ -1106,25 +1106,37 @@ func getSession(r *http.Request) (*forum.Session, error) {
 }
 
 func ChooseCategory(w http.ResponseWriter, r *http.Request) {
-	// Retrieve posts from the database
-	posts, err := getPosts()
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	choosenCat := r.FormValue("catCont")
-	category := &forum.Category{
-		CatName: choosenCat,
-		PostID:  posts[0].Post.PostID,
-	}
-	err = InsertCategory(category)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	} else {
-		http.Error(w, "No posts found", http.StatusBadRequest)
-		return
-	}
+    posts, err := getPosts()
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+
+    if len(posts) == 0 {
+        http.Error(w, "No posts found", http.StatusBadRequest)
+        return
+    }
+
+    choosenCats := r.Form["catCont[]"]
+    if len(choosenCats) == 0 {
+        http.Error(w, "No categories selected", http.StatusBadRequest)
+        return
+    }
+
+    for _, choosenCat := range choosenCats {
+        category := &forum.Category{
+            CatName: choosenCat,
+            PostID:  posts[0].Post.PostID,
+        }
+        err = InsertCategory(category)
+        if err != nil {
+            http.Error(w, err.Error(), http.StatusInternalServerError)
+            return
+        }
+    }
+
+    // Redirect or respond with success message
+    http.Redirect(w, r, "/registered", http.StatusSeeOther)
 }
 
 func InsertCategory(cat *forum.Category) error {
@@ -1169,12 +1181,15 @@ func createPost(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		postContent := r.FormValue("postCont")
-		categoryName := r.FormValue("catCont")
-		if categoryName == "" {
-			categoryName = "None"
-		}	
-	
+        postContent := strings.TrimSpace(r.FormValue("postCont"))
+		if postContent == "" {
+            http.Error(w, "Post content cannot be empty", http.StatusBadRequest)
+            return
+        }
+		categoryNames := r.Form["catCont"]
+		if len(categoryNames) == 0 {
+			categoryNames = []string{"None"}
+		}
 
 		// Create a new Post struct
 		post := &forum.Post{
@@ -1190,15 +1205,17 @@ func createPost(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// Insert the category for the post
-		category := &forum.Category{
-			CatName: categoryName,
-			PostID:  int(lastInsertID),
-		}
-		err = InsertCategory(category)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
+		// Insert categories for the post
+        for _, categoryName := range categoryNames {
+            category := &forum.Category{
+                CatName: categoryName,
+                PostID:  int(lastInsertID),
+            }
+            err = InsertCategory(category)
+            if err != nil {
+                http.Error(w, err.Error(), http.StatusInternalServerError)
+                return
+            }
 		}
 
 		http.Redirect(w, r, "/registered", http.StatusSeeOther)
@@ -1254,7 +1271,11 @@ func createComment(w http.ResponseWriter, r *http.Request) {
 
 		userID := session.UserID
 
-		comContent := r.FormValue("commentCont")
+        comContent := strings.TrimSpace(r.FormValue("commentCont"))
+		if comContent == "" {
+            http.Error(w, "Comment content cannot be empty", http.StatusBadRequest)
+            return
+        }
 		postID := r.URL.Query().Get("postID")
 
 		// Convert postID from string to int

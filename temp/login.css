@@ -61,6 +61,7 @@ header h1 {
 }
 
 .login-container input[type="email"],
+.login-container input[type="text"],
 .login-container input[type="password"] {
     width: 100%;
     padding: 12px;

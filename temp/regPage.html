@@ -9,7 +9,7 @@
 </head>
 <body>
     <header>
-        <h1>Web Forum</h1>
+        <h1>Twitter</h1>
     </header>
 
     <div class="container">
@@ -22,11 +22,12 @@
             <div class="error-message">{{.ErrorMessage}}</p>
             {{end}}
             <form action="/doRegister" method="post">
-                <input type="text" name="username" placeholder="Username" required>
-                <input type="email" name="email" placeholder="Email" required>
-                <input type="password" name="password" placeholder="Password" required>
+                <input type="text" name="username" placeholder="Username" required maxlength="75">
+                <input type="email" name="email" placeholder="Email" required maxlength="75">
+                <input type="password" name="password" placeholder="Password" required maxlength="75">
                 <input type="submit" value="Register">
                 <button><a href="/">Back</a></button>
+                <p class="account-query">Already have an account?<a href="/doLogin"> Login</a></p>
             </form>
         </div>
     </div>
