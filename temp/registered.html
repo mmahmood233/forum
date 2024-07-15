@@ -9,7 +9,7 @@
 </head>
 <body class="{{if .IsLoggedIn}}is-logged-in{{else}}is-logged-out{{end}}">
   <header>
-      <h1>MAIN</h1>
+      <h1>Twitter</h1>
   </header>
 
   
@@ -33,11 +33,12 @@
                 <option value="Sports">Sports</option>
                 <option value="News">News</option>
                 <option value="Announcements">Announcements</option> 
-                <option value="My Created Posts">My Created Posts</option>
-                <option value="My Liked Posts">My Liked Posts</option>
             </select>
             <br><br>
             <button type="submit">Apply filters</button>
+            <br><br>
+            <button type="submit" name="filter" value="myCreatedPosts">My Created Posts</button><br><br>
+            <button type="submit" name="filter" value="myLikedPosts">My Liked Posts</button>
             <br><br>
             <button type="button" id="clearFilters">Clear Filters</button>
             <br><br>
@@ -49,7 +50,7 @@
             {{range .Posts}}
             <div class="post">
               <h4>Post Content:</h4>
-                <h3>User: {{.User.Username}}</h3>
+                <h3>{{.User.Username}}</h3>
                 <p>Post: {{.Post.PostContent}}</p>
                 <p>Category: {{ range $index, $category := .Categories }}{{ if $index }}, {{ end }}{{ $category.CatName }}{{ end }}</p>
                 <small>Posted on: {{.Post.CreatedAt}}</small>
@@ -61,7 +62,7 @@
 
                 {{if $.IsLoggedIn}}
                 <form action="/createC?postID={{.Post.PostID}}" method="post">
-                    <textarea name="commentCont" placeholder="Comment Content" required maxlength="5000"></textarea>
+                    <textarea name="commentCont" placeholder="Comment Content..." required maxlength="500"></textarea>
                     <button type="submit">Add Comment</button>
                 </form>
                 {{end}}
@@ -96,19 +97,19 @@
             <tr><button><a href="doLogin">Login</a></button></tr><br><br>
             <tr><button><a href="doRegister">Register</a></button></tr><br><br>
             <tr></tr><button><a href="/">Create Post</a></button></tr><br><br>
+            <form action="/registered" method="get">
             <select name="catCont2" id="data2" class="search">
                 <option value="" disabled selected>Choose Category...</option>
                 <option value="None">None</option>
                 <option value="Sports">Sports</option>
                 <option value="News">News</option>
                 <option value="Announcements">Announcements</option> 
-                <option value="My Created Posts">My Created Posts</option>
-                <option value="My Liked Posts">My Liked Posts</option>
             </select>
             <br><br>
-            <button type="submit"><a href="/">Apply filters</a></button>
+            <button type="submit">Apply filters</button>
             <br><br>
-            <button type="button" id="clearFilters"><a href="/">Clear Filters</a></button>
+            <button type="button" id="clearFilters2">Clear Filters</button>
+        </form>
             <br><br>
             <tr><button><a href="/">Back to Main Page</a></button></tr><br><br><br>
         </table>
@@ -120,9 +121,7 @@
                 <h4>Post Content:</h4>
                 <h3>User: {{.User.Username}}</h3>
                 <p>Post: {{.Post.PostContent}}</p>
-                {{range .Categories}}
-                <p>Category: {{.CatName}}</p>
-                {{end}}
+                <p>Category: {{ range $index, $category := .Categories }}{{ if $index }}, {{ end }}{{ $category.CatName }}{{ end }}</p>
                 <small>Posted on: {{.Post.CreatedAt}}</small>
                 <script src="https://use.fontawesome.com/fe459689b4.js"></script>
                 <br>
@@ -248,7 +247,12 @@
             window.location.href = newUrl;
         });
     });
-    
+
+    document.getElementById('clearFilters2').addEventListener('click', function() {
+        var currentUrl = window.location.href;
+        var newUrl = currentUrl.split('?')[0];
+        window.location.href = newUrl;
+    });
     </script>
 </body>
 </html>

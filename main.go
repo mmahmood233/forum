@@ -926,6 +926,8 @@ func mainpage(w http.ResponseWriter, r *http.Request) {
 func parseMain(w http.ResponseWriter, r *http.Request) {
 	// Get the selected category from the form value
 	selectedCategory := r.FormValue("catCont2")
+	filter := r.FormValue("filter")
+
 
 	// Retrieve posts from the database
 	postsWithUsers, err := getPosts()
@@ -952,14 +954,18 @@ func parseMain(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for _, postWithUser := range postsWithUsers {
-        if selectedCategory == "My Created Posts" {
+        if filter == "myCreatedPosts" {
             if isLoggedIn && loggedInUser != nil && postWithUser.Post.UserID == loggedInUser.UserID {
                 filteredPosts = append(filteredPosts, postWithUser)
             }
-        } else if selectedCategory == "My Liked Posts" {
+        } else if filter == "myLikedPosts" {
             if isLoggedIn && loggedInUser != nil {
                 var userLiked bool
                 err = database.QueryRow("SELECT EXISTS(SELECT 1 FROM post_likes WHERE user_id = ? AND post_id = ?)", loggedInUser.UserID, postWithUser.Post.PostID).Scan(&userLiked)
+                if err != nil {
+                    log.Printf("Error checking if user liked post: %v", err)
+                    continue
+                }
                 if userLiked {
                     filteredPosts = append(filteredPosts, postWithUser)
                 }
@@ -967,11 +973,11 @@ func parseMain(w http.ResponseWriter, r *http.Request) {
         } else if selectedCategory == "None" {
             if len(postWithUser.Categories) == 0 || (len(postWithUser.Categories) == 1 && postWithUser.Categories[0].CatName == "None") {
                 filteredPosts = append(filteredPosts, postWithUser)
-            } 
-			} else if selectedCategory == "" || categoryMatches(postWithUser.Categories, selectedCategory) {
+            }
+        } else if selectedCategory == "" || categoryMatches(postWithUser.Categories, selectedCategory) {
             filteredPosts = append(filteredPosts, postWithUser)
         }
-	}
+    }
 
 	// Parse the HTML template file
 	tmpl, err := template.ParseFiles("temp/registered.html")
@@ -980,7 +986,7 @@ func parseMain(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Define and initialize the anonymous struct
+ // Define and initialize the anonymous struct
 	templateData := struct {
 		Posts []struct {
 			Post       forum.Post
@@ -990,11 +996,13 @@ func parseMain(w http.ResponseWriter, r *http.Request) {
 		}
 		IsLoggedIn       bool
 		SelectedCategory string
+		Filter           string
 		LoggedInUser     *forum.User
 	}{
 		Posts:            filteredPosts,
 		IsLoggedIn:       isLoggedIn,
 		SelectedCategory: selectedCategory,
+		Filter:           filter,
 		LoggedInUser:     loggedInUser,
 	}
 
