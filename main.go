@@ -1182,63 +1182,72 @@ func InsertCategory(cat *forum.Category) error {
 }
 
 func createPost(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodPost {
-		sessionObj, err := getSession(r)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
+    var errorMessage string
 
-        postContent := strings.TrimSpace(r.FormValue("postCont"))
-		if postContent == "" {
-            http.Error(w, "Post content cannot be empty", http.StatusBadRequest)
+    if r.Method == http.MethodPost {
+        sessionObj, err := getSession(r)
+        if err != nil {
+            http.Error(w, err.Error(), http.StatusInternalServerError)
             return
         }
-		categoryNames := r.Form["catCont"]
-		if len(categoryNames) == 0 {
-			categoryNames = []string{"None"}
-		}
 
-		// Create a new Post struct
-		post := &forum.Post{
-			UserID:      sessionObj.UserID,
-			PostContent: postContent,
-			CreatedAt:   time.Now().Format("02/01/2006 15:04:05"),
-		}
-
-		// Insert the post into the database
-		lastInsertID, err := insertPost(post)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		// Insert categories for the post
-        for _, categoryName := range categoryNames {
-            category := &forum.Category{
-                CatName: categoryName,
-                PostID:  int(lastInsertID),
+        postContent := strings.TrimSpace(r.FormValue("postCont"))
+        if postContent == "" {
+            errorMessage = "No post content"
+        } else {
+            categoryNames := r.Form["catCont"]
+            if len(categoryNames) == 0 {
+                categoryNames = []string{"None"}
             }
-            err = InsertCategory(category)
+
+            // Create a new Post struct
+            post := &forum.Post{
+                UserID:      sessionObj.UserID,
+                PostContent: postContent,
+                CreatedAt:   time.Now().Format("02/01/2006 15:04:05"),
+            }
+
+            // Insert the post into the database
+            lastInsertID, err := insertPost(post)
             if err != nil {
                 http.Error(w, err.Error(), http.StatusInternalServerError)
                 return
             }
-		}
 
-		http.Redirect(w, r, "/registered", http.StatusSeeOther)
-		return
-	}
+            // Insert categories for the post
+            for _, categoryName := range categoryNames {
+                category := &forum.Category{
+                    CatName: categoryName,
+                    PostID:  int(lastInsertID),
+                }
+                err = InsertCategory(category)
+                if err != nil {
+                    http.Error(w, err.Error(), http.StatusInternalServerError)
+                    return
+                }
+            }
 
-	tmpl, err := template.ParseFiles("temp/comPage.html")
-	if err != nil {
-		handleError(w, &forum.Error{Err: 500, ErrStr: "Error 500 found"})
-		return
-	}
+            http.Redirect(w, r, "/registered", http.StatusSeeOther)
+            return
+        }
+    }
 
-	// Render the template
-	tmpl.Execute(w, nil)
+    tmpl, err := template.ParseFiles("temp/comPage.html")
+    if err != nil {
+        handleError(w, &forum.Error{Err: 500, ErrStr: "Error 500 found"})
+        return
+    }
+
+    data := struct {
+        ErrorMessage string
+    }{
+        ErrorMessage: errorMessage,
+    }
+
+    // Render the template with the data
+    tmpl.Execute(w, data)
 }
+
 
 func insertPost(post *forum.Post) (int64, error) {
 	stmt, err := database.Prepare("INSERT INTO posts (user_id, post_content, post_created_at) VALUES (?, ?, ?)")

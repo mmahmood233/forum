@@ -14,13 +14,13 @@
             <div class="container">
                 <div class="post">
                     <h2>Create a Post</h2>
+                    {{if .ErrorMessage}}
+                    <p style="color: red;">{{.ErrorMessage}}</p>
+                    {{end}}
                     <form action="/createP" method="post">
                         <textarea name="postCont" placeholder="Post Content..." required maxlength="500"></textarea>
                         <div class="category-options">
                             <h3>Choose Categories:</h3>
-                            <!-- <label class="category-option">
-                                <input type="checkbox" name="catCont" value="None"> None
-                            </label> -->
                             <label class="category-option">
                                 <input type="checkbox" name="catCont" value="Sports"> Sports
                             </label>
