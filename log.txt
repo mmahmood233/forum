@@ -1,0 +1,2 @@
+2024/07/16 21:19:03 Starting server on :8800
+2024/07/16 21:19:25 New post created - ID: 3, Content: x, Categories: [None]

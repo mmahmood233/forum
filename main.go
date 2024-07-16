@@ -7,7 +7,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
-	"fmt"
+	// "fmt"
 	"html/template"
 	"io/ioutil"
 	"log"
@@ -62,6 +62,7 @@ func main() {
 
 	// Initialize the database
 	// session = make(map[string]*forum.Session)
+	
 
 	var err error
 	database, err = sql.Open("sqlite", "./temp/forum.db")
@@ -76,12 +77,21 @@ func main() {
 		log.Fatalf("Error executing SQL file: %v", err)
 	}
 
+	// Open or create the log file in append mode
+    logFile, err := os.Create("log.txt")
+    if err != nil {
+        log.Fatal("Error opening log file:", err)
+    }
+    defer logFile.Close()
+    log.SetOutput(logFile)
+
 	// Start the web server
 	log.Println("Starting server on :8800")
 	err = http.ListenAndServe(":8800", nil)
 	if err != nil {
 		log.Fatalf("Failed to start server: %v", err)
 	}
+	
 }
 
 func executeSQLFile(db *sql.DB, filepath string) error {
@@ -414,7 +424,12 @@ func handleLikePost(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-	log.Printf("User %d liked post %d", session.UserID, postID)
+	user, err := getUserByID(database, session.UserID)
+    if err != nil {
+        log.Printf("Error getting user info: %v", err)
+    } else {
+        log.Printf("User %s (ID: %d) liked post %d", user.Username, session.UserID, postID)
+    }
 
     var existingLike bool
     err = database.QueryRow("SELECT EXISTS(SELECT 1 FROM post_likes WHERE user_id = ? AND post_id = ?)", session.UserID, postID).Scan(&existingLike)
@@ -478,7 +493,12 @@ func handleDislikePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("User %d disliked post %d", session.UserID, postID)
+	user, err := getUserByID(database, session.UserID)
+    if err != nil {
+        log.Printf("Error getting user info: %v", err)
+    } else {
+        log.Printf("User %s (ID: %d) disliked post %d", user.Username, session.UserID, postID)
+    }
 
 	// Check if the user has already disliked the post
 	var existingDislike bool
@@ -550,7 +570,12 @@ func handleLikeComment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("User %d liked comment %d", session.UserID, commentID)
+	user, err := getUserByID(database, session.UserID)
+    if err != nil {
+        log.Printf("Error getting user info: %v", err)
+    } else {
+        log.Printf("User %s (ID: %d) liked comment %d", user.Username, session.UserID, commentID)
+    }
 
 	// Check if the user has already liked the comment
 	var existingLike bool
@@ -622,7 +647,12 @@ func handleDislikeComment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("User %d disliked comment %d", session.UserID, commentID)
+	user, err := getUserByID(database, session.UserID)
+    if err != nil {
+        log.Printf("Error getting user info: %v", err)
+    } else {
+        log.Printf("User %s (ID: %d) disliked comment %d", user.Username, session.UserID, commentID)
+    }
 
 	// Check if the user has already disliked the comment
 	var existingDislike bool
@@ -734,9 +764,6 @@ func handleReg(w http.ResponseWriter, r *http.Request) {
 			successMessage = "Registration successful!"
 		}
 
-		// Print the user struct to verify the ID has been updated
-		fmt.Printf("User Struct after insertion: %+v\n", user)
-
 	}
 
 	// Parse the HTML template file
@@ -764,7 +791,7 @@ func handleLog(w http.ResponseWriter, r *http.Request) {
         identifier := r.FormValue("identifier")
         password := r.FormValue("password2")
 
-        log.Printf("Received form data: identifier=%s, password=%s\n", identifier, password)
+        log.Printf("Received form data: user=%s, password=%s\n", identifier, password)
 
         // Authenticate the user (e.g., check the email/username and password)
         user, err := forum.ValByEmailOrUsername(database, identifier)
@@ -1214,6 +1241,8 @@ func createPost(w http.ResponseWriter, r *http.Request) {
                 return
             }
 
+			log.Printf("New post created - ID: %d, Content: %s, Categories: %v", lastInsertID, postContent, categoryNames)
+
             // Insert categories for the post
             for _, categoryName := range categoryNames {
                 category := &forum.Category{
@@ -1314,6 +1343,14 @@ func createComment(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+
+        // Log the comment information
+        user, err := getUserByID(database, userID)
+        if err != nil {
+            log.Printf("Error getting user info: %v", err)
+        } else {
+            log.Printf("New comment added - User: %s (ID: %d), Post ID: %d, Content: %s", user.Username, userID, postIDInt, comContent)
+        }
 
 		http.Redirect(w, r, "/registered", http.StatusSeeOther)
 		return
