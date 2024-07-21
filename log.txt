@@ -1,10 +1,24 @@
-2024/07/21 19:45:43 Starting server on :8800
-2024/07/21 19:46:18 Received form data: user=ss, password=ss
-2024/07/21 19:46:33 Received form data: user=xx, password=xx
-2024/07/21 19:46:42 New post created - ID: 4, Content: aaaaaaaaaaaaaaaaaaaaaaaaaaaa, Categories: [Sports News Announcements]
-2024/07/21 19:46:47 Session ID to delete: eTYKSSXxZC_TKPo_cQE3wZc5DMpfj3fg6MtehIJtDPE=
-2024/07/21 19:46:47 Session deleted from memory: eTYKSSXxZC_TKPo_cQE3wZc5DMpfj3fg6MtehIJtDPE=
-2024/07/21 19:46:47 Attempting to remove session from database: eTYKSSXxZC_TKPo_cQE3wZc5DMpfj3fg6MtehIJtDPE=
-2024/07/21 19:46:47 Rows affected: 1
-2024/07/21 19:46:47 Session deleted from database: eTYKSSXxZC_TKPo_cQE3wZc5DMpfj3fg6MtehIJtDPE=
-2024/07/21 19:46:47 Session cookie cleared: eTYKSSXxZC_TKPo_cQE3wZc5DMpfj3fg6MtehIJtDPE=
+2024/07/21 21:20:11 Starting server on :8800
+2024/07/21 21:21:47 Received form data: user=nnnamnnmasnd, password=asds
+2024/07/21 21:22:17 Received form data: user=sds, password=sdsd
+2024/07/21 21:22:23 Received form data: user=nnnamnnmasnd, password=asds
+2024/07/21 21:24:28 Received form data: email=xx@xx.xx, username=aas, password=123456
+2024/07/21 21:24:29 New user registered with ID: 1
+2024/07/21 21:24:40 Received form data: user=xx@xx.xx, password=123456
+2024/07/21 21:25:25 New post created - ID: 1, Content: asasd, Categories: [Sports News]
+2024/07/21 21:25:29 User aas (ID: 1) liked post 1
+2024/07/21 21:25:40 User aas (ID: 1) disliked post 1
+2024/07/21 21:25:45 User aas (ID: 1) liked post 1
+2024/07/21 21:25:47 User aas (ID: 1) disliked post 1
+2024/07/21 21:25:50 User aas (ID: 1) liked post 1
+2024/07/21 21:26:02 New comment added - User: aas (ID: 1), Post ID: 1, Content: dsds
+2024/07/21 21:26:12 New comment added - User: aas (ID: 1), Post ID: 1, Content: sdsds
+2024/07/21 21:26:14 New comment added - User: aas (ID: 1), Post ID: 1, Content: sfasd
+2024/07/21 21:26:30 User aas (ID: 1) liked comment 1
+2024/07/21 21:28:19 New post created - ID: 2, Content: frfrrffr, Categories: [None]
+2024/07/21 21:28:55 Session ID to delete: EA-EpgjyP5xorq1oql19QgNW85gxahkou35duHudXBk=
+2024/07/21 21:28:55 Session deleted from memory: EA-EpgjyP5xorq1oql19QgNW85gxahkou35duHudXBk=
+2024/07/21 21:28:55 Attempting to remove session from database: EA-EpgjyP5xorq1oql19QgNW85gxahkou35duHudXBk=
+2024/07/21 21:28:55 Rows affected: 1
+2024/07/21 21:28:55 Session deleted from database: EA-EpgjyP5xorq1oql19QgNW85gxahkou35duHudXBk=
+2024/07/21 21:28:55 Session cookie cleared: EA-EpgjyP5xorq1oql19QgNW85gxahkou35duHudXBk=

@@ -7,7 +7,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
-	// "fmt"
+	"fmt"
 	"html/template"
 	"io/ioutil"
 	"log"
@@ -17,7 +17,7 @@ import (
 	"time"
 	"strings"
 
-	_ "modernc.org/sqlite"
+	_ "github.com/mattn/go-sqlite3"
 
 	forum "forum/functions"
 
@@ -65,7 +65,7 @@ func main() {
 	
 
 	var err error
-	database, err = sql.Open("sqlite", "./temp/forum.db")
+	database, err = sql.Open("sqlite3", "./temp/forum.db")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -87,6 +87,7 @@ func main() {
 
 	// Start the web server
 	log.Println("Starting server on :8800")
+	fmt.Println("Starting server on :8800")
 	err = http.ListenAndServe(":8800", nil)
 	if err != nil {
 		log.Fatalf("Failed to start server: %v", err)
@@ -1269,7 +1270,7 @@ func createPost(w http.ResponseWriter, r *http.Request) {
             post := &forum.Post{
                 UserID:      sessionObj.UserID,
                 PostContent: postContent,
-                CreatedAt:   time.Now().Format("02/01/2006 15:04:05"),
+				CreatedAt:   time.Now(),
             }
 
             // Insert the post into the database
@@ -1373,7 +1374,7 @@ func createComment(w http.ResponseWriter, r *http.Request) {
 			UserID:         userID,
 			PostID:         postIDInt,
 			CommentContent: comContent,
-			CreatedAt:      time.Now().Format("02/01/2006 15:04:05"),
+			CreatedAt:      time.Now(),
 		}
 
 		err = insertComment(comment)
@@ -1426,9 +1427,17 @@ func getPosts() ([]struct {
         var p forum.Post
         var u forum.User
 
-        if err := rows.Scan(&p.PostID, &p.UserID, &p.PostContent, &p.CreatedAt, &u.Username, &p.LikeCount, &p.DislikeCount); err != nil {
-            return nil, err
-        }
+        var createdAtStr string
+		if err := rows.Scan(&p.PostID, &p.UserID, &p.PostContent, &createdAtStr, &u.Username, &p.LikeCount, &p.DislikeCount); err != nil {
+			return nil, err
+		}
+		createdAt, err := time.Parse(time.RFC3339, createdAtStr)
+		if err != nil {
+			return nil, err
+		}
+		p.CreatedAt = createdAt
+
+
 
         comments, err := getCommentsByPostID(p.PostID)
         if err != nil {
@@ -1477,9 +1486,16 @@ func getCommentsByPostID(postID int) ([]forum.Comment, error) {
     for rows.Next() {
         var c forum.Comment
 
-        if err := rows.Scan(&c.CommentID, &c.CommentContent, &c.CreatedAt, &c.Username, &c.LikeCount, &c.DislikeCount); err != nil {
-            return nil, err
-        }
+        var createdAtStr string
+		if err := rows.Scan(&c.CommentID, &c.CommentContent, &createdAtStr, &c.Username, &c.LikeCount, &c.DislikeCount); err != nil {
+			return nil, err
+		}
+		createdAt, err := time.Parse(time.RFC3339, createdAtStr)
+		if err != nil {
+			return nil, err
+		}
+		c.CreatedAt = createdAt
+
 
         comments = append(comments, c)
     }

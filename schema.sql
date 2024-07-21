@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS posts (
     post_id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
     post_content TEXT NOT NULL,
-    post_created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    post_created_at DATETIME DEFAULT (DATETIME('now')),
     FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
 

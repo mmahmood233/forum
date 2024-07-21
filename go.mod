@@ -1,6 +1,6 @@
 module forum
 
-go 1.21.0
+go 1.23
 
 require github.com/gorilla/sessions v1.3.0
 

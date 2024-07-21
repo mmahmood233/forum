@@ -53,7 +53,7 @@
                 <h3>{{.User.Username}}</h3>
                 <p>Post: {{.Post.PostContent}}</p>
                 <p>Category: {{ range $index, $category := .Categories }}{{ if $index }}, {{ end }}{{ $category.CatName }}{{ end }}</p>
-                <small>Posted on: {{.Post.CreatedAt}}</small>
+                <small>Posted on: {{.Post.CreatedAt.Format "2006-01-02 15:04:05"}}</small>
                 <script src="https://use.fontawesome.com/fe459689b4.js"></script>
                 <script src="https://use.fontawesome.com/fe459689b4.js"></script>
                 <br>
@@ -72,7 +72,7 @@
                       <h4>Comment Content:</h4>
                         <p>Comment: {{.CommentContent}}</p>
                         <small>Commented by: {{.Username}} </small><br>
-                        <small>on {{.CreatedAt}}</small>
+                        <small>Commented on: {{.CreatedAt.Format "2006-01-02 15:04:05"}}</small>
                         <script src="https://use.fontawesome.com/fe459689b4.js"></script>
                         <br>
                         <button class="btn" id="green" data-count="0" data-id="{{.CommentID}}"><i class="fa fa-thumbs-up fa-lg" aria-hidden="true"></i> <span class="count" id="like-count-comment-{{.CommentID}}">{{.LikeCount}}</span></button>
@@ -122,7 +122,7 @@
                 <h3>User: {{.User.Username}}</h3>
                 <p>Post: {{.Post.PostContent}}</p>
                 <p>Category: {{ range $index, $category := .Categories }}{{ if $index }}, {{ end }}{{ $category.CatName }}{{ end }}</p>
-                <small>Posted on: {{.Post.CreatedAt}}</small>
+                <small>Posted on: {{.Post.CreatedAt.Format "2006-01-02 15:04:05"}}</small>
                 <script src="https://use.fontawesome.com/fe459689b4.js"></script>
                 <br>
                 <button class="btn" id="green" disabled><i class="fa fa-thumbs-up fa-lg" aria-hidden="true"></i> <span class="count">{{.Post.LikeCount}}</span></button>
@@ -134,7 +134,7 @@
                         <h4>Comment Content:</h4>
                         <p>Comment: {{.CommentContent}}</p>
                         <small>Commented by: {{.Username}} </small><br>
-                        <small>on {{.CreatedAt}}</small>
+                        <small>Commented on: {{.CreatedAt.Format "2006-01-02 15:04:05"}}</small>
                         <br>
                         <button class="btn" id="green" disabled><i class="fa fa-thumbs-up fa-lg" aria-hidden="true"></i><span class="count">{{.LikeCount}}</span></button>
                         <button class="btn" id="red" disabled><i class="fa fa-thumbs-down fa-lg" aria-hidden="true"></i> <span class="count">{{.DislikeCount}}</span></button>

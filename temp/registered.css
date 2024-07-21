@@ -25,7 +25,6 @@ body {
   padding: 0 20px; 
 }
 
-
 textarea[name="commentCont"] {
     resize: none;
 }
@@ -51,11 +50,9 @@ header h1 {
 
 .welcome-message h2 {
   color: #1da1f2;
-  /* position: fixed; */
   background-color: rgba(255, 255, 255, 0.95);
   z-index: 1000;
 }
-
 
 .logged-in-content {
   display: flex;
@@ -110,6 +107,19 @@ header h1 {
   justify-content: center;
 }
 
+body.is-logged-out .container {
+  margin-left: 350px;
+  width: calc(100% - 400px);
+  padding: 20px;
+  display: flex;
+  justify-content: center;
+}
+
+body.is-logged-out .logged-out-content {
+  width: 200%;
+  max-width: 2000px;
+}
+
 .post-container {
   max-width: 1000px;
   width: 100%;
@@ -130,22 +140,16 @@ header h1 {
   transition: background-color 0.2s;
 }
 
-.post:hover {
-  /* background-color: var(--hover-color); */
-}
-
 .post h3 {
   margin: 0;
   font-size: 25px;
   font-weight: bold;
-  /* color: var(--text-color); */
   color: #1da1f2;
 }
 
 .post h4 {
   font-size: 20px;
   font-weight: bold;
-  /* color: var(--primary-color); */
 }
 
 .post p {
@@ -194,13 +198,7 @@ input[type="text"], textarea {
   border-top: 1px solid var(--border-color);
 }
 
-.comment p {
-  word-wrap: break-word;
-  white-space: pre-wrap;
-  max-width: 100%;
-}
-
-.post p {
+.comment p, .post p {
   word-wrap: break-word;
   white-space: pre-wrap;
   max-width: 100%;
@@ -215,17 +213,16 @@ input[type="text"], textarea {
 }
 
 .btn#green:hover, .btn#green:active, .btn#green:focus {
-  color: #28a745; /* Green color */
+  color: #28a745;
 }
 
 .btn#red:hover, .btn#red:active, .btn#red:focus {
-  color: #dc3545; /* Red color */
+  color: #dc3545;
 }
 
 .btn#green:hover, .btn#red:hover {
   color: var(--primary-color);
 }
-
 
 footer {
   background-color: var(--background-color);
@@ -258,7 +255,6 @@ body.is-logged-in .logged-in-content {
 body.is-logged-out .logged-out-content {
   display: block;
   margin-top: 80px;
-  padding: 20px;
 }
 
 form {
