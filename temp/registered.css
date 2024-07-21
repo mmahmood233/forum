@@ -20,9 +20,9 @@ body {
 
 .container {
   width: 100%;
-  max-width: 1000px; 
+  max-width: 1000px;
   margin: 0 auto;
-  padding: 0 20px; 
+  padding: 0 20px;
 }
 
 textarea[name="commentCont"] {
@@ -310,3 +310,71 @@ form[action="/"] button {
   font-size: 16px;
   padding: 5px;
 }
+
+button a {
+    display: block;
+    width: 100%;
+    height: 100%;
+    text-decoration: none;
+    color: inherit;
+    padding: 8px 16px;
+    box-sizing: border-box;
+}
+
+button {
+    padding: 0;
+    position: relative;
+}
+
+button a::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.standard-button {
+  width: 100%;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: bold;
+  border-radius: 9999px;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.standard-button:hover {
+  background-color: #1991da;
+}
+
+.post form button[type="submit"] {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 9999px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  width: auto;
+  display: inline-block;
+}
+
+.post form button[type="submit"]:hover {
+  background-color: #1991da;
+}
+
+textarea[name="commentCont"] {
+  resize: none;
+  height: 60px; /* Adjust this value to make it smaller */
+  width: 90%;
+  padding: 5px;
+  margin-bottom: 10px;
+}
+

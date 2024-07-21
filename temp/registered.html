@@ -35,12 +35,12 @@
                 <option value="Announcements">Announcements</option> 
             </select>
             <br><br>
-            <button type="submit">Apply filters</button>
+            <button type="submit" class="standard-button">Apply filters</button>
             <br><br>
-            <button type="submit" name="filter" value="myCreatedPosts">My Created Posts</button><br><br>
-            <button type="submit" name="filter" value="myLikedPosts">My Liked Posts</button>
+            <button type="submit" name="filter" value="myCreatedPosts" class="standard-button">My Created Posts</button><br><br>
+            <button type="submit" name="filter" value="myLikedPosts" class="standard-button">My Liked Posts</button>
             <br><br>
-            <button type="button" id="clearFilters">Clear Filters</button>
+            <button type="button" id="clearFilters" class="standard-button">Clear Filters</button>
             <br><br>
         </form>        
       </table>
@@ -106,9 +106,9 @@
                 <option value="Announcements">Announcements</option> 
             </select>
             <br><br>
-            <button type="submit">Apply filters</button>
+            <button type="submit" class="standard-button">Apply filters</button>
             <br><br>
-            <button type="button" id="clearFilters2">Clear Filters</button>
+            <button type="button" id="clearFilters2" class="standard-button">Clear Filters</button>
         </form>
             <br><br>
             <tr><button><a href="/">Back to Main Page</a></button></tr><br><br><br>
@@ -119,7 +119,7 @@
             {{range .Posts}}
             <div class="post">
                 <h4>Post Content:</h4>
-                <h3>User: {{.User.Username}}</h3>
+                <h3>{{.User.Username}}</h3>
                 <p>Post: {{.Post.PostContent}}</p>
                 <p>Category: {{ range $index, $category := .Categories }}{{ if $index }}, {{ end }}{{ $category.CatName }}{{ end }}</p>
                 <small>Posted on: {{.Post.CreatedAt.Format "2006-01-02 15:04:05"}}</small>

@@ -66,7 +66,8 @@ header h1 {
     margin-bottom: 20px;
 }
 
-button {
+.button {
+    display: inline-block;
     width: 150px;
     padding: 12px;
     border: none;
@@ -74,6 +75,8 @@ button {
     cursor: pointer;
     font-size: 16px;
     font-weight: bold;
+    text-align: center;
+    text-decoration: none;
     transition: background-color 0.2s;
 }
 
@@ -95,6 +98,7 @@ button {
 .register-btn:hover {
     background-color: var(--hover-color);
 }
+
 
 button a {
     text-decoration: none;

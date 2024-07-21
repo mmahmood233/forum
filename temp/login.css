@@ -138,3 +138,28 @@ button a {
     color: var(--primary-color);
     text-decoration: none;
 }
+
+.button-link {
+    display: block;
+    width: 100%;
+    text-decoration: none;
+}
+
+.button-link button {
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0;
+    background-color: var(--hover-color);
+    color: var(--primary-color);
+    border: 1px solid var(--primary-color);
+    border-radius: 9999px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    transition: background-color 0.2s;
+}
+
+.button-link button:hover {
+    background-color: #e8f5fe;
+}
+
