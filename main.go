@@ -732,61 +732,93 @@ func DeleteCommentDislike(db *sql.DB, userID, commentID int) error {
 	return err
 }
 
-//---
-
 func handleReg(w http.ResponseWriter, r *http.Request) {
-	var successMessage string
-	var errorMessage string
+    var successMessage string
+    var errorMessage string
 
-	if r.Method == http.MethodPost {
-		email := r.FormValue("email")
-		username := r.FormValue("username")
-		password := r.FormValue("password")
+    if r.Method == http.MethodPost {
+        email := r.FormValue("email")
+        username := r.FormValue("username")
+        password := r.FormValue("password")
 
-		log.Printf("Received form data: email=%s, username=%s, password=%s\n", email, username, password)
-
-		// Populate the User struct with form data
-		user := &forum.User{
-			Email:    email,
-			Username: username,
-			Password: password,
+		//Check for Non-ASCII characters in username
+		eng := forum.Ascii(username)
+		if eng != nil {
+			handleError(w, &forum.Error{Err: 400, ErrStr: "Error 400 found"})
+			return
 		}
 
-		// Insert the new user into the database
-		err := forum.InsertUser(database, user)
-		if err != nil {
-			if err.Error() == "user with this email already exists" {
-				errorMessage = "This email is already taken!"
-			} else {
-				errorMessage = "This username is already taken!"
-			}
-		} else {
-			successMessage = "Registration successful!"
+		//Check for Non-ASCII characters in email
+		eng = forum.Ascii(email)
+		if eng != nil {
+			handleError(w, &forum.Error{Err: 400, ErrStr: "Error 400 found"})
+			return
 		}
 
-	}
+		//Check for Non-ASCII characters in password
+		eng = forum.Ascii(password)
+		if eng != nil {
+			handleError(w, &forum.Error{Err: 400, ErrStr: "Error 400 found"})
+			return
+		}
 
-	// Parse the HTML template file
-	tmpl, err := template.ParseFiles("temp/regPage.html")
-	if err != nil {
-		handleError(w, &forum.Error{Err: 500, ErrStr: "Error 500 found"})
-		return
-	}
+        if strings.Contains(email, " ") {
+            errorMessage = "Email cannot contain spaces"
+        } else if strings.Contains(username, " ") {
+            errorMessage = "Username cannot contain spaces"
+        } else if strings.Contains(password, " ") {
+            errorMessage = "Password cannot contain spaces"
+        } else if !strings.Contains(email, ".") {
+            errorMessage = "Invalid email format"			
+		}
 
-	data := struct {
-		SuccessMessage string
-		ErrorMessage   string
-	}{
-		SuccessMessage: successMessage,
-		ErrorMessage:   errorMessage,
-	}
-	
+        if errorMessage == "" {
+            log.Printf("Received form data: email=%s, username=%s, password=%s\n", email, username, password)
 
-	// Render the template with the data
-	tmpl.Execute(w, data)
+			
+            // Populate the User struct with form data
+            user := &forum.User{
+                Email:    email,
+                Username: username,
+                Password: password,
+            }
+
+            // Insert the new user into the database
+            err := forum.InsertUser(database, user)
+            if err != nil {
+                if err.Error() == "user with this email already exists" {
+                    errorMessage = "This email is already taken!"
+                } else {
+                    errorMessage = "This username is already taken!"
+                }
+            } else {
+                successMessage = "Registration successful!"
+            }
+        }
+    }
+
+    // Parse the HTML template file
+    tmpl, err := template.ParseFiles("temp/regPage.html")
+    if err != nil {
+        handleError(w, &forum.Error{Err: 500, ErrStr: "Error 500 found"})
+        return
+    }
+
+    data := struct {
+        SuccessMessage string
+        ErrorMessage   string
+    }{
+        SuccessMessage: successMessage,
+        ErrorMessage:   errorMessage,
+    }
+
+    // Render the template with the data
+    tmpl.Execute(w, data)
 }
 
+
 func handleLog(w http.ResponseWriter, r *http.Request) {
+    var errorMessage string
     if r.Method == http.MethodPost {
         identifier := r.FormValue("identifier")
         password := r.FormValue("password2")
@@ -801,22 +833,21 @@ func handleLog(w http.ResponseWriter, r *http.Request) {
         }
 
         if user == nil || user.Password != password {
-            http.Error(w, "Invalid email/username or password", http.StatusUnauthorized)
+            errorMessage = "Invalid username/email or password"
+        } else {
+            // Create a new session for the user
+            sessionID := createSession(w, user.UserID)
+
+            // Store the user ID in the session
+            session[sessionID] = &forum.Session{
+                UserID:    user.UserID,
+                ExpiresAt: time.Now().Add(time.Hour * 24),
+            }
+
+            // Redirect the user to the home page or another page
+            http.Redirect(w, r, "/registered", http.StatusSeeOther)
             return
         }
-
-        // Create a new session for the user
-        sessionID := createSession(w, user.UserID)
-
-        // Store the user ID in the session
-        session[sessionID] = &forum.Session{
-            UserID:    user.UserID,
-            ExpiresAt: time.Now().Add(time.Hour * 24),
-        }
-
-        // Redirect the user to the home page or another page
-        http.Redirect(w, r, "/registered", http.StatusSeeOther)
-        return
     }
 
     // Parse the HTML template file
@@ -826,9 +857,16 @@ func handleLog(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    // Render the template
-    tmpl.Execute(w, nil)
+    data := struct {
+        ErrorMessage string
+    }{
+        ErrorMessage: errorMessage,
+    }
+
+    // Render the template with the data
+    tmpl.Execute(w, data)
 }
+
 
 func logout(w http.ResponseWriter, r *http.Request) {
 	// Retrieve session ID from the cookie

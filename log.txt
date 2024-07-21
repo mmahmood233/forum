@@ -1,2 +1,10 @@
-2024/07/16 21:19:03 Starting server on :8800
-2024/07/16 21:19:25 New post created - ID: 3, Content: x, Categories: [None]
+2024/07/21 19:45:43 Starting server on :8800
+2024/07/21 19:46:18 Received form data: user=ss, password=ss
+2024/07/21 19:46:33 Received form data: user=xx, password=xx
+2024/07/21 19:46:42 New post created - ID: 4, Content: aaaaaaaaaaaaaaaaaaaaaaaaaaaa, Categories: [Sports News Announcements]
+2024/07/21 19:46:47 Session ID to delete: eTYKSSXxZC_TKPo_cQE3wZc5DMpfj3fg6MtehIJtDPE=
+2024/07/21 19:46:47 Session deleted from memory: eTYKSSXxZC_TKPo_cQE3wZc5DMpfj3fg6MtehIJtDPE=
+2024/07/21 19:46:47 Attempting to remove session from database: eTYKSSXxZC_TKPo_cQE3wZc5DMpfj3fg6MtehIJtDPE=
+2024/07/21 19:46:47 Rows affected: 1
+2024/07/21 19:46:47 Session deleted from database: eTYKSSXxZC_TKPo_cQE3wZc5DMpfj3fg6MtehIJtDPE=
+2024/07/21 19:46:47 Session cookie cleared: eTYKSSXxZC_TKPo_cQE3wZc5DMpfj3fg6MtehIJtDPE=

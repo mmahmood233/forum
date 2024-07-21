@@ -19,7 +19,7 @@
             <div class="success-message">{{.SuccessMessage}}</div>
             {{end}}
             {{if .ErrorMessage}}
-            <div class="error-message">{{.ErrorMessage}}</p>
+            <div class="error-message" style="color: red; text-align: center;">{{.ErrorMessage}}</p>
             {{end}}
             <form action="/doRegister" method="post">
                 <input type="text" name="username" placeholder="Username" required maxlength="75">
