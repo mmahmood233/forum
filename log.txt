@@ -1,7 +1,9 @@
-2024/07/21 22:53:03 Starting server on :8800
-2024/07/21 22:53:45 Session ID to delete: -ONpWattdS0cUmsI0UHdJUJZlD9DzrLMXGYqFVMsbiE=
-2024/07/21 22:53:45 Session deleted from memory: -ONpWattdS0cUmsI0UHdJUJZlD9DzrLMXGYqFVMsbiE=
-2024/07/21 22:53:45 Attempting to remove session from database: -ONpWattdS0cUmsI0UHdJUJZlD9DzrLMXGYqFVMsbiE=
-2024/07/21 22:53:45 Rows affected: 1
-2024/07/21 22:53:45 Session deleted from database: -ONpWattdS0cUmsI0UHdJUJZlD9DzrLMXGYqFVMsbiE=
-2024/07/21 22:53:45 Session cookie cleared: -ONpWattdS0cUmsI0UHdJUJZlD9DzrLMXGYqFVMsbiE=
+2024/07/22 20:16:55 Starting server on :8800
+2024/07/22 20:21:51 New post created - ID: 4, Content: jjj, Categories: [None]
+2024/07/22 20:33:56 Session ID to delete: JDJhJDEwJGlmMVkzblIxM1p3SWI0LjBKek9WSk85d1FtM1VvckNid0M5dGFKNmNCQ1ZOR2JOUFIyUkxx
+2024/07/22 20:33:56 Session deleted from memory: JDJhJDEwJGlmMVkzblIxM1p3SWI0LjBKek9WSk85d1FtM1VvckNid0M5dGFKNmNCQ1ZOR2JOUFIyUkxx
+2024/07/22 20:33:56 Attempting to remove session from database: JDJhJDEwJGlmMVkzblIxM1p3SWI0LjBKek9WSk85d1FtM1VvckNid0M5dGFKNmNCQ1ZOR2JOUFIyUkxx
+2024/07/22 20:33:56 Rows affected: 1
+2024/07/22 20:33:56 Session deleted from database: JDJhJDEwJGlmMVkzblIxM1p3SWI0LjBKek9WSk85d1FtM1VvckNid0M5dGFKNmNCQ1ZOR2JOUFIyUkxx
+2024/07/22 20:33:56 Session cookie cleared: JDJhJDEwJGlmMVkzblIxM1p3SWI0LjBKek9WSk85d1FtM1VvckNid0M5dGFKNmNCQ1ZOR2JOUFIyUkxx
+2024/07/22 20:34:50 Received form data: user=xx, password=xx

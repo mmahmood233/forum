@@ -67,20 +67,6 @@ CREATE TABLE IF NOT EXISTS categories (
     cat_name TEXT NOT NULL UNIQUE
 );
 
-CREATE TABLE IF NOT EXISTS tags (
-    tag_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    post_id INTEGER NOT NULL,
-    tags_name TEXT NOT NULL UNIQUE,
-    FOREIGN KEY (post_id) REFERENCES posts(post_id)
-);
-
-CREATE TABLE IF NOT EXISTS post_categories (
-    post_id INTEGER NOT NULL,
-    category_id INTEGER NOT NULL,
-    FOREIGN KEY (post_id) REFERENCES posts(post_id),
-    FOREIGN KEY (category_id) REFERENCES categories(id),
-    PRIMARY KEY (post_id, category_id)
-);
 
 CREATE TABLE IF NOT EXISTS sessions (
     session_id TEXT PRIMARY KEY,

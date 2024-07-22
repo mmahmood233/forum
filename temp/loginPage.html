@@ -8,27 +8,23 @@
 </head>
 <body>
     <header>
-        <h1>Twitter</h1>
+        <h1>Web Forum</h1>
     </header>
 
-    <div class="container">
+    <div class="main-content">
         <div class="login-container">
             <h2>Login</h2>
             {{if .ErrorMessage}}
-            <p style="color: red; text-align: center;">{{.ErrorMessage}}</p>
+            <p class="error-message">{{.ErrorMessage}}</p>
             {{end}}
             <form action="/doLogin" method="post">
                 <input type="text" name="identifier" placeholder="Email or Username" required>
                 <input type="password" name="password2" placeholder="Password" required>
-                <input type="submit" value="Login">
-                <a href="/" class="button-link"><button type="button">Back</button></a>
-                <p class="account-query">Don't have an account?<a href="/doRegister"> Register</a></p>
+                <button type="submit" class="standard-button">Login</button>
+                <a href="/" class="button-link"><button type="button" class="standard-button">Back</button></a>
             </form>
+            <p class="account-query">Don't have an account? <a href="/doRegister">Register</a></p>
         </div>
     </div>
-
-    <footer>
-        <p>Web Forum &copy; 2024</p>
-    </footer>
 </body>
 </html>

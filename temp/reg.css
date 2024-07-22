@@ -13,27 +13,24 @@ body {
     font-family: 'Roboto', -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
     background-color: var(--background-color);
     color: var(--text-color);
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
     margin: 0;
     padding: 0;
     line-height: 1.3;
-}
-
-.container {
-    flex: 1;
-    width: 100%;
-    max-width: 600px;
-    margin: 0 auto;
-    padding: 20px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 
 header {
     background-color: var(--background-color);
     border-bottom: 1px solid var(--border-color);
-    padding: 15px 0;
+    padding: 10px 0;
     text-align: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
 }
 
 header h1 {
@@ -43,25 +40,35 @@ header h1 {
     color: var(--primary-color);
 }
 
+.main-content {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    margin-top: 60px;
+}
+
 .register-container {
     background-color: var(--background-color);
-    padding: 20px;
-    margin-top: 30px;
+    padding: 30px;
     border: 1px solid var(--border-color);
     border-radius: 15px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 350px;
 }
 
 .register-container h2 {
     text-align: center;
     margin-bottom: 20px;
     color: var(--text-color);
+    font-size: 24px;
 }
 
 .register-container form {
     display: flex;
     flex-direction: column;
-    align-items: center;
 }
 
 .register-container input[type="text"],
@@ -72,73 +79,45 @@ header h1 {
     margin: 10px 0;
     border: 1px solid var(--border-color);
     border-radius: 9999px;
-    font-size: 15px;
+    font-size: 14px;
+    box-sizing: border-box;
 }
 
-.register-container input[type="submit"] {
+.standard-button {
     width: 100%;
     padding: 12px;
-    margin: 20px 0;
+    margin: 10px 0;
     background-color: var(--primary-color);
     color: white;
     border: none;
     border-radius: 9999px;
     cursor: pointer;
-    font-size: 16px;
+    font-size: 14px;
     font-weight: bold;
     transition: background-color 0.2s;
 }
 
-.register-container input[type="submit"]:hover {
+.standard-button:hover {
     background-color: #1991da;
 }
 
 .success-message {
-    color: #34a853;
+    color: #28a745;
     text-align: center;
-    margin-bottom: 20px;
+    margin-bottom: 15px;
+    font-size: 14px;
 }
 
 .error-message {
-    color: red;
+    color: #e0245e;
     text-align: center;
-    margin-bottom: 10px;
-}
-
-footer {
-    background-color: var(--background-color);
-    color: var(--secondary-text-color);
-    text-align: center;
-    padding: 10px 0;
-    width: 100%;
-    border-top: 1px solid var(--border-color);
-}
-
-button {
-    width: 100%;
-    padding: 12px;
-    margin: 10px 0;
-    background-color: var(--hover-color);
-    color: var(--primary-color);
-    border: 1px solid var(--primary-color);
-    border-radius: 9999px;
-    cursor: pointer;
-    font-size: 16px;
-    font-weight: bold;
-    transition: background-color 0.2s;
-}
-
-button:hover {
-    background-color: #e8f5fe;
-}
-
-button a {
-    text-decoration: none;
-    color: var(--primary-color);
+    margin-bottom: 15px;
+    font-size: 14px;
 }
 
 .account-query {
     font-size: 14px;
+    text-align: center;
     margin-top: 20px;
     color: var(--secondary-text-color);
 }
@@ -148,21 +127,28 @@ button a {
     text-decoration: none;
 }
 
-.button-link {
-    display: block;
-    width: 100%;
-    text-decoration: none;
+footer {
+    background-color: var(--background-color);
+    color: var(--secondary-text-color);
+    text-align: center;
+    padding: 10px 0;
+    border-top: 1px solid var(--border-color);
+    font-size: 12px;
 }
 
-.button-link button {
-    width: 100%;
-    height: 100%;
-    border: none;
-    background: none;
-    padding: 8px 16px;
-    cursor: pointer;
-    color: inherit;
-    font-size: inherit;
-    text-align: left;
-}
+@media (max-width: 480px) {
+    .register-container {
+        padding: 20px;
+    }
 
+    .register-container h2 {
+        font-size: 20px;
+    }
+
+    .register-container input[type="text"],
+    .register-container input[type="email"],
+    .register-container input[type="password"],
+    .standard-button {
+        font-size: 14px;
+    }
+}

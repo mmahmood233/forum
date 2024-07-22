@@ -65,17 +65,6 @@ type Category struct {
 	PostID  int
 }
 
-type Tag struct {
-	TagID   int
-	PostID  int
-	TagName string
-}
-
-type PostCategory struct {
-	PostID     int
-	CategoryID int
-}
-
 type Session struct {
 	SessionID string
 	UserID    int

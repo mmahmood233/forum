@@ -20,7 +20,7 @@ body {
 
 .container {
     width: 100%;
-    max-width: 600px;
+    max-width: 400px; /* Decreased from 450px */
     margin: 0 auto;
     padding: 20px;
 }
@@ -28,7 +28,7 @@ body {
 header {
     background-color: var(--background-color);
     border-bottom: 1px solid var(--border-color);
-    padding: 15px 0;
+    padding: 8px 0; /* Decreased from 9px */
     text-align: center;
     position: fixed;
     top: 0;
@@ -39,15 +39,15 @@ header {
 
 header h1 {
     margin: 0;
-    font-size: 23px;
+    font-size: 23px; /* Decreased from 19px */
     font-weight: bold;
     color: var(--primary-color);
 }
 
 .post {
     background-color: var(--background-color);
-    padding: 20px;
-    margin-top: 80px;
+    padding: 13px; /* Decreased from 14px */
+    margin-top: 60px; /* Decreased from 65px */
     border: 1px solid var(--border-color);
     border-radius: 15px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
@@ -55,7 +55,7 @@ header h1 {
 
 .post h2 {
     text-align: center;
-    margin-bottom: 20px;
+    margin-bottom: 13px; /* Decreased from 14px */
     color: var(--text-color);
 }
 
@@ -67,34 +67,34 @@ header h1 {
 
 textarea[name="postCont"] {
     width: 100%;
-    padding: 12px;
-    margin: 10px 0;
+    padding: 8px; /* Decreased from 9px */
+    margin: 6px 0; /* Decreased from 7px */
     border: 1px solid var(--border-color);
     border-radius: 15px;
-    font-size: 15px;
+    font-size: 13px; /* Decreased from 13.5px */
     resize: vertical;
     min-height: 100px;
 }
 
 input[name="catCont"] {
     width: 100%;
-    padding: 12px;
-    margin: 10px 0;
+    padding: 8px; /* Decreased from 9px */
+    margin: 6px 0; /* Decreased from 7px */
     border: 1px solid var(--border-color);
     border-radius: 9999px;
-    font-size: 15px;
+    font-size: 13px; /* Decreased from 13.5px */
 }
 
 button {
     width: 100%;
-    padding: 12px;
-    margin: 10px 0;
+    padding: 8px; /* Decreased from 9px */
+    margin: 6px 0; /* Decreased from 7px */
     background-color: var(--primary-color);
     color: white;
     border: none;
     border-radius: 9999px;
     cursor: pointer;
-    font-size: 16px;
+    font-size: 14px; /* Decreased from 14.5px */
     font-weight: bold;
     transition: background-color 0.2s;
 }
@@ -112,7 +112,7 @@ footer {
     background-color: var(--background-color);
     color: var(--secondary-text-color);
     text-align: center;
-    padding: 10px 0;
+    padding: 6px 0; /* Decreased from 7px */
     position: fixed;
     bottom: 0;
     width: 100%;
@@ -127,9 +127,9 @@ footer {
 
 .search2 {
     border: 1px solid var(--border-color);
-    width: 500px;
-    height: 35px;
-    font-size: 16px;
+    width: 400px; /* Decreased from 450px */
+    height: 29px; /* Decreased from 30px */
+    font-size: 14px; /* Decreased from 14.5px */
     padding: 5px;
 }
 
@@ -137,16 +137,8 @@ footer {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: 12px;
-    margin: 25px 0;
-}
-
-.category-options {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 12px;
-    margin: 25px 0;
+    gap: 8px; /* Decreased from 9px */
+    margin: 16px 0; /* Decreased from 18px */
 }
 
 .category-option {
@@ -155,7 +147,7 @@ footer {
     background-color: var(--hover-color);
     border: 1px solid var(--border-color);
     border-radius: 20px;
-    padding: 8px 16px;
+    padding: 7px 12px; /* Decreased from 7px 13px */
     cursor: pointer;
     transition: all 0.2s ease;
 }
@@ -168,20 +160,19 @@ footer {
 }
 
 .category-option input[type="checkbox"] {
-    margin-right: 8px;
+    margin-right: 6px; /* Decreased from 7px */
     cursor: pointer;
 }
 
 .category-option label {
     cursor: pointer;
-    font-size: 14px;
+    font-size: 12px; /* Decreased from 12.5px */
     font-weight: 500;
 }
 
 .category-option:hover label {
     color: white;
 }
-
 
 textarea[name="postCont"] {
     resize: none;
@@ -204,4 +195,3 @@ textarea[name="postCont"] {
     font-size: inherit;
     text-align: left;
 }
-
