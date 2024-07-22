@@ -76,3 +76,7 @@ type Error struct {
 	ErrStr string
 }
 
+type PostCategory struct {
+	PostID int
+	CategoryID  int
+}

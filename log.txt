@@ -1,9 +1,63 @@
-2024/07/22 20:16:55 Starting server on :8800
-2024/07/22 20:21:51 New post created - ID: 4, Content: jjj, Categories: [None]
-2024/07/22 20:33:56 Session ID to delete: JDJhJDEwJGlmMVkzblIxM1p3SWI0LjBKek9WSk85d1FtM1VvckNid0M5dGFKNmNCQ1ZOR2JOUFIyUkxx
-2024/07/22 20:33:56 Session deleted from memory: JDJhJDEwJGlmMVkzblIxM1p3SWI0LjBKek9WSk85d1FtM1VvckNid0M5dGFKNmNCQ1ZOR2JOUFIyUkxx
-2024/07/22 20:33:56 Attempting to remove session from database: JDJhJDEwJGlmMVkzblIxM1p3SWI0LjBKek9WSk85d1FtM1VvckNid0M5dGFKNmNCQ1ZOR2JOUFIyUkxx
-2024/07/22 20:33:56 Rows affected: 1
-2024/07/22 20:33:56 Session deleted from database: JDJhJDEwJGlmMVkzblIxM1p3SWI0LjBKek9WSk85d1FtM1VvckNid0M5dGFKNmNCQ1ZOR2JOUFIyUkxx
-2024/07/22 20:33:56 Session cookie cleared: JDJhJDEwJGlmMVkzblIxM1p3SWI0LjBKek9WSk85d1FtM1VvckNid0M5dGFKNmNCQ1ZOR2JOUFIyUkxx
-2024/07/22 20:34:50 Received form data: user=xx, password=xx
+2024/07/22 21:11:42 Starting server on :8800
+2024/07/22 21:11:54 Received form data: email=xx@xx.xx, username=xx, password=xx
+2024/07/22 21:11:54 New user registered with ID: 1
+2024/07/22 21:11:56 Received form data: user=xx, password=xx
+2024/07/22 21:12:03 New post created - ID: 1, Content: xxxxxxxxxxxxxxxxxx, Categories: [Sports]
+2024/07/22 21:12:14 New comment added - User: xx (ID: 1), Post ID: 1, Content: cxxxxcxcxc
+2024/07/22 21:12:17 User xx (ID: 1) liked post 1
+2024/07/22 21:12:20 User xx (ID: 1) disliked comment 1
+2024/07/22 21:12:29 User xx (ID: 1) liked post 1
+2024/07/22 21:12:33 User xx (ID: 1) liked post 1
+2024/07/22 21:13:10 Received form data: user=xx, password=xx
+2024/07/22 21:13:18 Received form data: user=xx, password=xx
+2024/07/22 21:14:53 Session ID to delete: JDJhJDEwJEFVTEZxREZubTVESGh6TXFza2tpTE9qa0xWbG5kR0dvWVZKaW9RZmp1ZzJvVTRnRkFlaXI2
+2024/07/22 21:14:53 Session deleted from memory: JDJhJDEwJEFVTEZxREZubTVESGh6TXFza2tpTE9qa0xWbG5kR0dvWVZKaW9RZmp1ZzJvVTRnRkFlaXI2
+2024/07/22 21:14:53 Attempting to remove session from database: JDJhJDEwJEFVTEZxREZubTVESGh6TXFza2tpTE9qa0xWbG5kR0dvWVZKaW9RZmp1ZzJvVTRnRkFlaXI2
+2024/07/22 21:14:53 Rows affected: 1
+2024/07/22 21:14:53 Session deleted from database: JDJhJDEwJEFVTEZxREZubTVESGh6TXFza2tpTE9qa0xWbG5kR0dvWVZKaW9RZmp1ZzJvVTRnRkFlaXI2
+2024/07/22 21:14:53 Session cookie cleared: JDJhJDEwJEFVTEZxREZubTVESGh6TXFza2tpTE9qa0xWbG5kR0dvWVZKaW9RZmp1ZzJvVTRnRkFlaXI2
+2024/07/22 21:16:26 Received form data: user=xx, password=xx
+2024/07/22 21:16:48 New post created - ID: 2, Content: uyvyuv
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+fdhdhf, Categories: [Announcements]
+2024/07/22 21:17:14 User xx (ID: 1) liked post 2
+2024/07/22 21:17:15 User xx (ID: 1) disliked post 2
+2024/07/22 21:17:29 User xx (ID: 1) liked post 2
+2024/07/22 21:17:31 User xx (ID: 1) disliked post 2
+2024/07/22 21:18:53 Session ID to delete: JDJhJDEwJHlYRGFOMEZBczVBUEZnUUI1SHVrNXVFZzY1eDM3UWNLWU1VOEZRV2JabzJ3bEpuaFFVNlVl
+2024/07/22 21:18:53 Session deleted from memory: JDJhJDEwJHlYRGFOMEZBczVBUEZnUUI1SHVrNXVFZzY1eDM3UWNLWU1VOEZRV2JabzJ3bEpuaFFVNlVl
+2024/07/22 21:18:53 Attempting to remove session from database: JDJhJDEwJHlYRGFOMEZBczVBUEZnUUI1SHVrNXVFZzY1eDM3UWNLWU1VOEZRV2JabzJ3bEpuaFFVNlVl
+2024/07/22 21:18:53 Rows affected: 1
+2024/07/22 21:18:53 Session deleted from database: JDJhJDEwJHlYRGFOMEZBczVBUEZnUUI1SHVrNXVFZzY1eDM3UWNLWU1VOEZRV2JabzJ3bEpuaFFVNlVl
+2024/07/22 21:18:53 Session cookie cleared: JDJhJDEwJHlYRGFOMEZBczVBUEZnUUI1SHVrNXVFZzY1eDM3UWNLWU1VOEZRV2JabzJ3bEpuaFFVNlVl

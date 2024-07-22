@@ -19,29 +19,29 @@ body {
 
 .container {
     width: 100%;
-    max-width: 600px;
+    max-width: 400px; /* Decreased from 500px */
     margin: 0 auto;
-    padding: 20px;
+    padding: 10px; /* Decreased from 15px */
 }
 
 header {
     background-color: var(--background-color);
     border-bottom: 1px solid var(--border-color);
-    padding: 15px 0;
+    padding: 10px 0; /* Decreased from 12px */
     text-align: center;
 }
 
 header h1 {
     margin: 0;
-    font-size: 23px;
+    font-size: 18px; /* Decreased from 20px */
     font-weight: bold;
     color: var(--primary-color);
 }
 
 .error-container {
     background-color: var(--background-color);
-    padding: 30px;
-    margin-top: 50px;
+    padding: 20px; /* Decreased from 25px */
+    margin-top: 30px; /* Decreased from 40px */
     border: 1px solid var(--border-color);
     border-radius: 15px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
@@ -50,23 +50,24 @@ header h1 {
 
 .error-container h2 {
     color: var(--error-color);
-    margin-bottom: 20px;
+    margin-bottom: 10px; /* Decreased from 15px */
+    font-size: 16px; /* Decreased from 18px */
 }
 
 .error-container p {
     color: var(--secondary-text-color);
-    margin-bottom: 30px;
+    margin-bottom: 20px; /* Decreased from 25px */
 }
 
 button {
-    width: 200px;
-    padding: 12px;
+    width: 160px; /* Decreased from 180px */
+    padding: 8px; /* Decreased from 10px */
     background-color: var(--primary-color);
     color: white;
     border: none;
     border-radius: 9999px;
     cursor: pointer;
-    font-size: 16px;
+    font-size: 12px; /* Decreased from 14px */
     font-weight: bold;
     transition: background-color 0.2s;
 }
@@ -84,7 +85,7 @@ footer {
     background-color: var(--background-color);
     color: var(--secondary-text-color);
     text-align: center;
-    padding: 10px 0;
+    padding: 6px 0; /* Decreased from 8px */
     position: fixed;
     bottom: 0;
     width: 100%;
